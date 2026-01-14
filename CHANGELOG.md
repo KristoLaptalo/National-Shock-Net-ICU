@@ -2,6 +2,52 @@
 
 All notable changes to the National Shock Net ICU project will be documented in this file.
 
+## [0.5.0] - 2026-01-14
+
+### Changed
+- **Major schema update** based on clinical registry (Shock.xlsx - PATIENT GENERAL DATA)
+- Restructured database to match real eCRF data collection form
+
+### Added
+- **Medical History** table with 28 comorbidity fields
+  - Cardiovascular: CAD, prior revascularization, MI, CHF, valvular disease, AF, pacemaker
+  - Neurological: CVD, TIA, hemiplegia, dementia, psychiatric
+  - Metabolic: diabetes, hypertension, dyslipidemia, adiposity
+  - Organ systems: liver, PAD, CKD, pulmonary, gastric
+  - Oncology: leukemia, lymphoma, solid tumors
+  - Charlson Comorbidity Index (calculated)
+- **Working Diagnoses** table with 22 admission diagnoses
+  - ACS (STEMI/NSTEMI), myocarditis, heart failure, Tako-Tsubo
+  - Sepsis, pneumonia, ARDS, PE
+  - Trauma (CNS, polytrauma, penetrating)
+  - OHCA/IHCA
+- **Shock Classification** with all types and sub-classifications
+  - Cardiogenic + SCAI (A-E)
+  - Distributive + type (Septic/Spinal)
+  - Obstructive + type (Tamponade/PE/Pneumothorax)
+  - Hypovolemic + ATLS (1-4)
+  - Forrester classification (Dry/Wet, Warm/Cold)
+  - SOFA Score
+- **Echocardiography** table with complete echo parameters
+  - LV/RV function, LVEF, GLS
+  - All valve assessments
+  - Doppler measurements (LVOT VTI, E/A waves, TR Vmax)
+  - IVC assessment
+- **Swan-Ganz** hemodynamics table
+  - All pressures (PCWP, PAP, RVP, RAP)
+  - CO (thermodilution & Fick), CI, PAPi
+- **Blood Gas** with point-of-care labs
+  - ABG values (pH, pO2, pCO2)
+  - Electrolytes, lactate, HCO3, BE
+  - Saturations (SaO2, ScvO2, SvO2)
+- **Pre-admission Medications** table with 37 medication categories
+  - Anticoagulants (warfarin, DOACs)
+  - Antiplatelets (ASA, P2Y12 inhibitors)
+  - Heart failure drugs (BB, ACEi, ARB, ARNI, MRA, SGLT2i)
+  - Antiarrhythmics, statins, diabetes meds
+- **Follow-up** tracking (6h, 12h, 24h, daily)
+- **Outcome** with ICU and hospital mortality/discharge data
+
 ## [0.4.0] - 2026-01-14
 
 ### Added

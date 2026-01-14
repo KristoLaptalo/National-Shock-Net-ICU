@@ -1,10 +1,11 @@
--- National Shock Net ICU Patient Database Schema
--- With: ICU Subscriptions, Admission Criteria, Patient Anonymization
--- Generated from ER diagram
+-- =============================================================================
+-- NATIONAL SHOCK NET ICU - DATABASE SCHEMA
+-- Based on Clinical Registry: Shock.xlsx - PATIENT GENERAL DATA
+-- =============================================================================
 
--- =============================================
--- HOSPITAL & ICU SUBSCRIPTION
--- =============================================
+-- =============================================================================
+-- INFRASTRUCTURE TABLES
+-- =============================================================================
 
 CREATE TABLE hospital (
     hospital_id INT PRIMARY KEY AUTO_INCREMENT,
@@ -14,8 +15,7 @@ CREATE TABLE hospital (
     phone VARCHAR(20),
     type ENUM('University', 'General', 'Regional', 'Private') NOT NULL,
     is_active BOOLEAN DEFAULT TRUE,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE icu_subscription (
@@ -29,121 +29,18 @@ CREATE TABLE icu_subscription (
     max_beds INT NOT NULL DEFAULT 10,
     max_monthly_submissions INT NOT NULL DEFAULT 50,
     current_month_submissions INT DEFAULT 0,
-    monthly_fee DECIMAL(10,2),
-    contact_person VARCHAR(200),
-    contact_email VARCHAR(150),
-    notes TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    activated_by INT,
-
-    FOREIGN KEY (hospital_id) REFERENCES hospital(hospital_id),
-
-    INDEX idx_subscription_active (is_active),
-    INDEX idx_subscription_dates (start_date, end_date)
+    FOREIGN KEY (hospital_id) REFERENCES hospital(hospital_id)
 );
 
 CREATE TABLE icu_unit (
     icu_id INT PRIMARY KEY AUTO_INCREMENT,
     hospital_id INT NOT NULL,
     name VARCHAR(100) NOT NULL,
-    type ENUM('Medical', 'Surgical', 'Cardiac', 'Neuro', 'Trauma', 'Mixed') NOT NULL,
+    type ENUM('Medical', 'Surgical', 'Cardiac', 'Coronary', 'Neuro', 'Trauma', 'Mixed') NOT NULL,
     total_beds INT NOT NULL,
-    available_beds INT NOT NULL,
     is_active BOOLEAN DEFAULT TRUE,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-
-    FOREIGN KEY (hospital_id) REFERENCES hospital(hospital_id),
-
-    INDEX idx_icu_hospital (hospital_id)
+    FOREIGN KEY (hospital_id) REFERENCES hospital(hospital_id)
 );
-
--- =============================================
--- ADMISSION CRITERIA DEFINITIONS
--- =============================================
-
-CREATE TABLE admission_criteria (
-    criteria_id INT PRIMARY KEY AUTO_INCREMENT,
-    category ENUM('Hemodynamic', 'Respiratory', 'Laboratory', 'Clinical', 'Shock-Specific') NOT NULL,
-    criteria_code VARCHAR(20) NOT NULL UNIQUE,
-    criteria_name VARCHAR(150) NOT NULL,
-    description TEXT,
-    value_type ENUM('Numeric', 'Boolean', 'Selection') NOT NULL,
-    unit VARCHAR(30),
-    threshold_min DECIMAL(10,4),
-    threshold_max DECIMAL(10,4),
-    selection_options JSON COMMENT 'For Selection type criteria',
-    weight INT DEFAULT 1 COMMENT 'Score weight for criteria',
-    is_mandatory BOOLEAN DEFAULT FALSE,
-    is_active BOOLEAN DEFAULT TRUE,
-    display_order INT DEFAULT 0,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
-
--- Pre-populate standard shock criteria
-INSERT INTO admission_criteria (category, criteria_code, criteria_name, description, value_type, unit, threshold_min, threshold_max, is_mandatory) VALUES
-('Hemodynamic', 'MAP_LOW', 'Mean Arterial Pressure < 65', 'MAP below 65 mmHg despite fluid resuscitation', 'Numeric', 'mmHg', NULL, 65, TRUE),
-('Hemodynamic', 'SBP_LOW', 'Systolic BP < 90', 'Systolic blood pressure below 90 mmHg', 'Numeric', 'mmHg', NULL, 90, TRUE),
-('Laboratory', 'LACTATE_HIGH', 'Lactate > 2.0', 'Serum lactate above 2.0 mmol/L', 'Numeric', 'mmol/L', 2.0, NULL, TRUE),
-('Hemodynamic', 'VASO_REQ', 'Vasopressor Requirement', 'Requires vasopressors to maintain MAP >= 65', 'Boolean', NULL, NULL, NULL, FALSE),
-('Clinical', 'ALTERED_MS', 'Altered Mental Status', 'Acute change in mental status', 'Boolean', NULL, NULL, NULL, FALSE),
-('Respiratory', 'SPO2_LOW', 'SpO2 < 90%', 'Oxygen saturation below 90% on room air', 'Numeric', '%', NULL, 90, FALSE),
-('Laboratory', 'CREAT_HIGH', 'Creatinine > 2.0', 'Acute kidney injury with creatinine > 2.0', 'Numeric', 'mg/dL', 2.0, NULL, FALSE),
-('Shock-Specific', 'SCAI_STAGE', 'SCAI Shock Stage', 'Society for Cardiovascular Angiography staging', 'Selection', NULL, NULL, NULL, TRUE),
-('Shock-Specific', 'SHOCK_TYPE', 'Type of Shock', 'Primary shock classification', 'Selection', NULL, NULL, NULL, TRUE),
-('Hemodynamic', 'CI_LOW', 'Cardiac Index < 2.2', 'Cardiac index below 2.2 L/min/m2', 'Numeric', 'L/min/m2', NULL, 2.2, FALSE);
-
--- =============================================
--- ANONYMIZED PATIENT
--- =============================================
-
-CREATE TABLE patient (
-    patient_id INT PRIMARY KEY AUTO_INCREMENT,
-
-    -- Anonymization fields
-    pseudonym VARCHAR(50) NOT NULL UNIQUE COMMENT 'Generated pseudonym e.g. ALPHA-7X9K',
-    qr_code VARCHAR(100) NOT NULL UNIQUE COMMENT 'Unique QR identifier',
-    qr_code_image BLOB COMMENT 'Generated QR code image',
-
-    -- Encrypted real identity (AES-256 encrypted)
-    encrypted_identity VARBINARY(512) COMMENT 'Encrypted: first_name|last_name|national_id',
-    identity_iv VARBINARY(16) COMMENT 'Initialization vector for decryption',
-    national_id_hash VARCHAR(64) UNIQUE COMMENT 'SHA-256 hash for duplicate detection',
-
-    -- Non-identifying demographics
-    date_of_birth DATE NOT NULL,
-    age_at_registration INT,
-    gender ENUM('Male', 'Female', 'Other') NOT NULL,
-    blood_type ENUM('A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-', 'Unknown') DEFAULT 'Unknown',
-
-    -- Medical identifiers (anonymized)
-    medical_record_hash VARCHAR(64) COMMENT 'Hashed MRN for cross-reference',
-
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-
-    INDEX idx_patient_pseudonym (pseudonym),
-    INDEX idx_patient_qr (qr_code),
-    INDEX idx_patient_dob (date_of_birth)
-);
-
--- =============================================
--- PSEUDONYM GENERATOR SEQUENCE
--- =============================================
-
-CREATE TABLE pseudonym_sequence (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    prefix VARCHAR(10) NOT NULL,
-    last_number INT DEFAULT 0,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
-
-INSERT INTO pseudonym_sequence (prefix, last_number) VALUES
-('ALPHA', 0), ('BETA', 0), ('GAMMA', 0), ('DELTA', 0), ('SIGMA', 0);
-
--- =============================================
--- PHYSICIAN & ADMIN
--- =============================================
 
 CREATE TABLE physician (
     physician_id INT PRIMARY KEY AUTO_INCREMENT,
@@ -154,13 +51,8 @@ CREATE TABLE physician (
     license_number VARCHAR(50) NOT NULL UNIQUE,
     email VARCHAR(150) NOT NULL,
     phone VARCHAR(20),
-    can_submit_patients BOOLEAN DEFAULT TRUE,
     is_active BOOLEAN DEFAULT TRUE,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-
-    FOREIGN KEY (hospital_id) REFERENCES hospital(hospital_id),
-
-    INDEX idx_physician_hospital (hospital_id)
+    FOREIGN KEY (hospital_id) REFERENCES hospital(hospital_id)
 );
 
 CREATE TABLE admin_user (
@@ -171,28 +63,40 @@ CREATE TABLE admin_user (
     last_name VARCHAR(100) NOT NULL,
     role ENUM('Admin', 'SuperAdmin', 'Reviewer', 'DataManager') NOT NULL,
     email VARCHAR(150) NOT NULL UNIQUE,
-    can_view_identity BOOLEAN DEFAULT FALSE COMMENT 'Permission to decrypt patient identity',
-    is_active BOOLEAN DEFAULT TRUE,
+    can_view_identity BOOLEAN DEFAULT FALSE,
+    is_active BOOLEAN DEFAULT TRUE
+);
+
+-- =============================================================================
+-- PATIENT (ANONYMIZED)
+-- =============================================================================
+
+CREATE TABLE patient (
+    patient_id INT PRIMARY KEY AUTO_INCREMENT,
+
+    -- Anonymization
+    patient_code VARCHAR(50) NOT NULL UNIQUE COMMENT 'Anonymized patient code',
+    qr_code VARCHAR(100) NOT NULL UNIQUE COMMENT 'QR identifier',
+    encrypted_identity VARBINARY(512) COMMENT 'AES-256 encrypted real identity',
+    national_id_hash VARCHAR(64) UNIQUE COMMENT 'SHA-256 hash for duplicate detection',
+
+    -- Demographics (GENERAL DATA)
+    date_of_birth DATE NOT NULL,
+    age INT COMMENT 'Calculated from DOB',
+    gender ENUM('M', 'F') NOT NULL,
+    weight_kg DECIMAL(5,2) COMMENT 'Weight in kg',
+    height_cm DECIMAL(5,2) COMMENT 'Height in cm',
+    bsa DECIMAL(4,2) COMMENT 'Body Surface Area - Calculated',
+    bmi DECIMAL(4,1) COMMENT 'BMI - Calculated',
+
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    last_login DATETIME
+
+    INDEX idx_patient_code (patient_code)
 );
 
-CREATE TABLE care_team_member (
-    member_id INT PRIMARY KEY AUTO_INCREMENT,
-    first_name VARCHAR(100) NOT NULL,
-    last_name VARCHAR(100) NOT NULL,
-    role ENUM('Attending', 'Resident', 'Nurse', 'Specialist', 'Pharmacist', 'Therapist') NOT NULL,
-    department VARCHAR(100),
-    license_number VARCHAR(50),
-    phone VARCHAR(20),
-    email VARCHAR(150),
-    is_active BOOLEAN DEFAULT TRUE,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
-
--- =============================================
--- ADMISSION (Central Table)
--- =============================================
+-- =============================================================================
+-- ADMISSION (CENTRAL TABLE)
+-- =============================================================================
 
 CREATE TABLE admission (
     admission_id INT PRIMARY KEY AUTO_INCREMENT,
@@ -201,26 +105,20 @@ CREATE TABLE admission (
     icu_id INT NOT NULL,
     physician_id INT NOT NULL,
     approved_by INT,
+
     case_number VARCHAR(20) NOT NULL UNIQUE,
+    date_of_admission DATE NOT NULL COMMENT 'Format DD/MM/YYYY',
+    date_of_shock_onset DATE COMMENT 'Format DD/MM/YYYY',
 
-    -- Dates
-    submission_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    review_date DATETIME,
-    admission_date DATETIME,
-    discharge_date DATETIME,
+    -- Point of Referral
+    point_of_referral TINYINT COMMENT '0-ER / 1-Ward / 2-Other ICU / 3-Other Hospital',
+    referral_hospital VARCHAR(200) COMMENT 'If point_of_referral = 3',
 
-    -- Status
     status ENUM('Pending', 'Under Review', 'Approved', 'Rejected', 'Admitted', 'Discharged', 'Archived') DEFAULT 'Pending',
-    rejection_reason TEXT,
     bed_number VARCHAR(20),
 
-    -- Criteria evaluation
-    criteria_score INT DEFAULT 0,
-    criteria_met BOOLEAN DEFAULT FALSE,
-    mandatory_criteria_met BOOLEAN DEFAULT FALSE,
-
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    submission_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+    admission_date DATETIME,
 
     FOREIGN KEY (patient_id) REFERENCES patient(patient_id),
     FOREIGN KEY (subscription_id) REFERENCES icu_subscription(subscription_id),
@@ -229,220 +127,409 @@ CREATE TABLE admission (
     FOREIGN KEY (approved_by) REFERENCES admin_user(admin_id),
 
     INDEX idx_admission_status (status),
-    INDEX idx_admission_date (admission_date),
-    INDEX idx_admission_subscription (subscription_id)
+    INDEX idx_admission_date (date_of_admission)
 );
 
--- =============================================
--- CRITERIA EVALUATION FOR ADMISSION
--- =============================================
+-- =============================================================================
+-- MEDICAL HISTORY (COMORBIDITIES)
+-- =============================================================================
 
-CREATE TABLE criteria_checklist (
-    checklist_id INT PRIMARY KEY AUTO_INCREMENT,
-    admission_id INT NOT NULL,
-    criteria_id INT NOT NULL,
-    measured_value DECIMAL(10,4),
-    selected_option VARCHAR(100) COMMENT 'For Selection type criteria',
-    is_met BOOLEAN NOT NULL,
-    notes TEXT,
-    evaluated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    evaluated_by INT,
-
-    FOREIGN KEY (admission_id) REFERENCES admission(admission_id) ON DELETE CASCADE,
-    FOREIGN KEY (criteria_id) REFERENCES admission_criteria(criteria_id),
-    FOREIGN KEY (evaluated_by) REFERENCES physician(physician_id),
-
-    UNIQUE KEY unique_admission_criteria (admission_id, criteria_id),
-    INDEX idx_criteria_admission (admission_id)
-);
-
--- =============================================
--- SHOCK ASSESSMENT
--- =============================================
-
-CREATE TABLE shock_assessment (
-    assessment_id INT PRIMARY KEY AUTO_INCREMENT,
+CREATE TABLE medical_history (
+    history_id INT PRIMARY KEY AUTO_INCREMENT,
     admission_id INT NOT NULL UNIQUE,
-    shock_type ENUM('Cardiogenic', 'Septic', 'Hypovolemic', 'Distributive', 'Obstructive', 'Mixed') NOT NULL,
-    scai_stage ENUM('A', 'B', 'C', 'D', 'E') COMMENT 'SCAI Shock Classification',
 
-    -- Hemodynamics
-    lactate_level DECIMAL(5,2) COMMENT 'mmol/L',
-    lactate_clearance DECIMAL(5,2) COMMENT 'Percentage',
-    map DECIMAL(5,2) COMMENT 'Mean Arterial Pressure mmHg',
-    cardiac_output DECIMAL(4,2) COMMENT 'L/min',
-    cardiac_index DECIMAL(4,2) COMMENT 'L/min/m2',
-    heart_rate INT,
-    cvp DECIMAL(5,2),
-    scvo2 DECIMAL(5,2),
+    -- Cardiovascular
+    cad TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes: Coronary Artery Disease',
+    prior_revascularization TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes: Prior CABG/PCI',
+    history_mi TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes: History of MI',
+    chronic_heart_failure TINYINT DEFAULT 0 COMMENT '0-No / 1-DCM / 2-ICM / 3-Valvular / 4-Other',
+    severe_valvular_disease TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
+    atrial_fib_flutter TINYINT DEFAULT 0 COMMENT '0-No / 1-Parox / 2-Persistent / 3-Permanent',
+    implanted_pacemaker TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes / 2-ICD / 3-CRT/CRT-D',
 
-    -- Support requirements
-    vasopressor_required BOOLEAN DEFAULT FALSE,
-    mechanical_support BOOLEAN DEFAULT FALSE,
-    mechanical_support_type VARCHAR(100),
+    -- Neurological
+    cerebrovascular_disease TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
+    prior_tia_insult TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
+    hemiplegia_motor_deficit TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
+    dementia TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
+    psychiatric_disease TINYINT DEFAULT 0 COMMENT '0-No / 1-Compensated / 2-Decompensated',
 
-    meets_criteria BOOLEAN NOT NULL,
-    notes TEXT,
-    assessed_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    assessed_by INT,
+    -- Metabolic
+    diabetes TINYINT DEFAULT 0 COMMENT '0-No / 1-Uncomplicated / 2-End-organ Damage',
+    hypertension TINYINT DEFAULT 0 COMMENT '0-No / 1-Controlled / 2-Uncontrolled',
+    dyslipidemia TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
+    adiposity TINYINT DEFAULT 0 COMMENT '0-No / 1-Overweight / 2-Obese (auto by BMI)',
 
-    FOREIGN KEY (admission_id) REFERENCES admission(admission_id) ON DELETE CASCADE,
-    FOREIGN KEY (assessed_by) REFERENCES physician(physician_id),
+    -- Organ Systems
+    liver_disease TINYINT DEFAULT 0 COMMENT '0-No / 1-Mild / 2-Moderate / 3-Severe',
+    peripheral_artery_disease TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
+    chronic_kidney_disease TINYINT DEFAULT 0 COMMENT '0-No / 1-Mild / 2-Moderate / 3-End-stage',
+    chronic_pulmonary_disease TINYINT DEFAULT 0 COMMENT '0-No / 1-Mild / 2-Moderate / 3-Severe',
+    pulmonary_hypertension TINYINT DEFAULT 0 COMMENT '0-No / 1-Mild / 2-Severe / 3-Unknown',
+    chronic_gastric_disorder TINYINT DEFAULT 0 COMMENT '0-No / 1-GERD / 2-Gastritis / 3-PUD',
 
-    INDEX idx_shock_type (shock_type),
-    INDEX idx_scai_stage (scai_stage)
+    -- Autoimmune/Connective
+    connective_tissue_disorder TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
+    autoimmune_disorder TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
+
+    -- Oncology
+    leukemia TINYINT DEFAULT 0 COMMENT '0-No / 1-Acute / 2-Chronic / 3-Prior',
+    lymphoma TINYINT DEFAULT 0 COMMENT '0-No / 1-Acute / 2-Chronic / 3-Prior',
+    solid_organ_tumor TINYINT DEFAULT 0 COMMENT '0-No / 1-Localized / 2-Metastatic',
+
+    -- Infectious
+    hiv_aids TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
+
+    -- Calculated Score
+    charlson_comorbidity_index INT COMMENT 'Calculated',
+
+    FOREIGN KEY (admission_id) REFERENCES admission(admission_id) ON DELETE CASCADE
 );
 
--- =============================================
--- CLINICAL DATA TABLES
--- =============================================
+-- =============================================================================
+-- WORKING DIAGNOSES AT ADMISSION
+-- =============================================================================
 
-CREATE TABLE vital_signs (
-    vital_id INT PRIMARY KEY AUTO_INCREMENT,
+CREATE TABLE working_diagnosis (
+    diagnosis_id INT PRIMARY KEY AUTO_INCREMENT,
+    admission_id INT NOT NULL UNIQUE,
+
+    -- Cardiac
+    acute_coronary_syndrome TINYINT DEFAULT 0 COMMENT '0-No / 1-STEMI / 2-NSTEMI',
+    acute_myocarditis TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
+    heart_failure TINYINT DEFAULT 0 COMMENT '0-No / 1-Acute on chronic / 2-First presentation',
+    takotsubo_syndrome TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
+    peripartum_cardiomyopathy TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
+    acute_aortic_syndrome TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
+    electrical_storm TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
+
+    -- Pulmonary/Sepsis
+    sepsis TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
+    pneumonia TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
+    ards TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
+    pulmonary_embolism TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
+
+    -- Multi-system
+    multi_organ_failure TINYINT DEFAULT 0 COMMENT '0-No / 2-Two / 3-Three / 4-Four+',
+
+    -- Trauma
+    trauma_cns TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
+    polytrauma TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
+    penetrating_injury TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
+    trauma_other TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
+
+    -- Other
+    postpartum_hemorrhage TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
+    heat_shock TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
+    dehydration TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
+    drowning TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
+    intracerebral_hemorrhage TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
+
+    -- Cardiac Arrest
+    out_of_hospital_cardiac_arrest TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes (OHCA)',
+    in_hospital_cardiac_arrest TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes (IHCA)',
+
+    FOREIGN KEY (admission_id) REFERENCES admission(admission_id) ON DELETE CASCADE
+);
+
+-- =============================================================================
+-- SHOCK CLASSIFICATION
+-- =============================================================================
+
+CREATE TABLE shock_classification (
+    classification_id INT PRIMARY KEY AUTO_INCREMENT,
+    admission_id INT NOT NULL UNIQUE,
+
+    -- Cardiogenic Shock
+    shock_cardiogenic TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
+    scai_classification CHAR(1) COMMENT 'A / B / C / D / E - Calculated in eCRF',
+
+    -- Distributive Shock
+    shock_distributive TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
+    distributive_type TINYINT COMMENT '1-Septic / 2-Spinal injury',
+
+    -- Obstructive Shock
+    shock_obstructive TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
+    obstructive_type TINYINT COMMENT '1-Tamponade / 2-PE / 3-Tension Pneumothorax',
+
+    -- Hypovolemic Shock
+    shock_hypovolemic TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
+    atls_classification TINYINT COMMENT '1 / 2 / 3 / 4 - Calculated in eCRF',
+
+    -- Mixed (auto-calculated if 2+ present)
+    shock_mixed TINYINT DEFAULT 0 COMMENT 'Calculated automatically',
+
+    -- Forrester Classification
+    congestion TINYINT COMMENT '1-Dry / 2-Wet',
+    perfusion TINYINT COMMENT '1-Warm / 2-Cold',
+
+    -- SOFA Score
+    sofa_score INT COMMENT 'Sequential Organ Failure Assessment',
+
+    FOREIGN KEY (admission_id) REFERENCES admission(admission_id) ON DELETE CASCADE
+);
+
+-- =============================================================================
+-- HEMODYNAMIC DATA (Multiple timepoints: Admission, 6h, 12h, 24h, daily)
+-- =============================================================================
+
+CREATE TABLE hemodynamic_data (
+    hemo_id INT PRIMARY KEY AUTO_INCREMENT,
     admission_id INT NOT NULL,
-    heart_rate INT,
-    systolic_bp INT,
-    diastolic_bp INT,
-    map DECIMAL(5,2),
-    respiratory_rate INT,
-    temperature DECIMAL(4,2),
-    spo2 INT,
-    cvp DECIMAL(5,2),
-    cardiac_output DECIMAL(4,2),
-    urine_output INT,
-    gcs_score INT,
+    timepoint VARCHAR(20) NOT NULL COMMENT 'admission / 6h / 12h / 24h / day2 / day3...',
+
+    sap_invasive INT COMMENT 'Systolic Arterial Pressure (mmHg)',
+    dap_invasive INT COMMENT 'Diastolic Arterial Pressure (mmHg)',
+    map_invasive INT COMMENT 'Mean Arterial Pressure (mmHg)',
+    pulse INT COMMENT 'Heart rate (bpm)',
+    rhythm VARCHAR(50) COMMENT 'Cardiac rhythm',
+    respiratory_rate INT COMMENT 'Breaths per minute',
+    spo2 INT COMMENT 'Oxygen saturation (%)',
+    body_temperature DECIMAL(3,1) COMMENT 'Temperature (°C)',
+
+    recorded_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (admission_id) REFERENCES admission(admission_id) ON DELETE CASCADE,
+    INDEX idx_hemo_admission (admission_id),
+    INDEX idx_hemo_timepoint (timepoint)
+);
+
+-- =============================================================================
+-- ECHOCARDIOGRAPHY
+-- =============================================================================
+
+CREATE TABLE echocardiography (
+    echo_id INT PRIMARY KEY AUTO_INCREMENT,
+    admission_id INT NOT NULL,
+    timepoint VARCHAR(20) NOT NULL COMMENT 'admission / follow-up',
+
+    echo_performed TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
+
+    -- Ventricular Function
+    lv_function_visual TINYINT COMMENT '0-Reduced / 1-Preserved',
+    rv_function_visual TINYINT COMMENT '0-Reduced / 1-Preserved',
+    lvef INT COMMENT 'LV Ejection Fraction (%)',
+    lvef_assessment TINYINT COMMENT '0-2D visual / 1-Calculation',
+    gls INT COMMENT 'Global Longitudinal Strain (%)',
+
+    -- Valve Assessment (0-None / 1-Severe / 2-Less than severe)
+    mitral_regurgitation TINYINT DEFAULT 0,
+    mitral_stenosis TINYINT DEFAULT 0,
+    aortic_regurgitation TINYINT DEFAULT 0,
+    aortic_stenosis TINYINT DEFAULT 0,
+    tricuspid_regurgitation TINYINT DEFAULT 0,
+    pulmonary_stenosis TINYINT DEFAULT 0,
+    pulmonary_regurgitation TINYINT DEFAULT 0,
+
+    -- Doppler Measurements
+    lvot_vti DECIMAL(5,2) COMMENT 'LVOT Velocity Time Integral',
+    lvot_diameter DECIMAL(4,2) COMMENT 'LVOT Diameter (cm)',
+    e_wave_velocity DECIMAL(5,2) COMMENT 'E wave velocity (cm/s)',
+    deceleration_time_e DECIMAL(5,1) COMMENT 'DT E wave (ms)',
+    a_wave_velocity DECIMAL(5,2) COMMENT 'A wave velocity (cm/s)',
+    pv_systolic_velocity DECIMAL(5,2) COMMENT 'Pulmonary vein systolic (cm/s)',
+    pv_diastolic_velocity DECIMAL(5,2) COMMENT 'Pulmonary vein diastolic (cm/s)',
+    tr_vmax DECIMAL(4,2) COMMENT 'Tricuspid regurgitation Vmax (m/s)',
+    pf_acceleration_time DECIMAL(5,1) COMMENT 'Pulmonary flow AccT (ms)',
+
+    -- IVC Assessment
+    ivc_status TINYINT COMMENT '0-Normal / 1-Dilated+preserved / 2-Dilated<50% / 3-Dilated fixed',
+
+    performed_at DATETIME,
+
+    FOREIGN KEY (admission_id) REFERENCES admission(admission_id) ON DELETE CASCADE,
+    INDEX idx_echo_admission (admission_id)
+);
+
+-- =============================================================================
+-- SWAN-GANZ CATHETER HEMODYNAMICS
+-- =============================================================================
+
+CREATE TABLE swan_ganz (
+    sg_id INT PRIMARY KEY AUTO_INCREMENT,
+    admission_id INT NOT NULL,
+    timepoint VARCHAR(20) NOT NULL,
+
+    sg_performed TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
+
+    -- Pressures (mmHg)
+    pcwp INT COMMENT 'Pulmonary Capillary Wedge Pressure',
+    spap INT COMMENT 'Systolic Pulmonary Artery Pressure',
+    mpap INT COMMENT 'Mean Pulmonary Artery Pressure',
+    dpap INT COMMENT 'Diastolic Pulmonary Artery Pressure',
+    srvp INT COMMENT 'Systolic Right Ventricular Pressure',
+    drvp INT COMMENT 'Diastolic Right Ventricular Pressure',
+    rap INT COMMENT 'Right Atrial Pressure',
+
+    -- Cardiac Output
+    co_thermodilution DECIMAL(4,2) COMMENT 'CO Thermodilution (L/min)',
+    co_fick DECIMAL(4,2) COMMENT 'CO Fick method (L/min)',
+    cardiac_index DECIMAL(3,2) COMMENT 'Calculated (L/min/m²)',
+    papi DECIMAL(4,2) COMMENT 'Pulmonary Artery Pulsatility Index - Calculated',
+
+    performed_at DATETIME,
+
+    FOREIGN KEY (admission_id) REFERENCES admission(admission_id) ON DELETE CASCADE,
+    INDEX idx_sg_admission (admission_id)
+);
+
+-- =============================================================================
+-- BLOOD GAS / POINT-OF-CARE LABS
+-- =============================================================================
+
+CREATE TABLE blood_gas (
+    gas_id INT PRIMARY KEY AUTO_INCREMENT,
+    admission_id INT NOT NULL,
+    timepoint VARCHAR(20) NOT NULL COMMENT 'admission / 6h / 12h / 24h...',
+
+    -- Blood Gas
+    ph DECIMAL(4,3),
+    po2 DECIMAL(5,1) COMMENT 'mmHg',
+    pco2 DECIMAL(5,1) COMMENT 'mmHg',
+
+    -- Electrolytes
+    sodium DECIMAL(5,1) COMMENT 'mmol/L',
+    potassium DECIMAL(3,1) COMMENT 'mmol/L',
+    calcium DECIMAL(3,2) COMMENT 'mmol/L',
+
+    -- Metabolic
+    lactate DECIMAL(4,2) COMMENT 'mmol/L',
+    hco3 DECIMAL(4,1) COMMENT 'mmol/L',
+    base_excess DECIMAL(4,1) COMMENT 'mEq/L',
+
+    -- Oxygen Saturations
+    sao2 DECIMAL(4,1) COMMENT 'Arterial saturation (%)',
+    scvo2 DECIMAL(4,1) COMMENT 'Central venous saturation (%) - from CVC',
+    svo2 DECIMAL(4,1) COMMENT 'Mixed venous saturation (%) - from S-G',
+
+    -- Hematology
+    hemoglobin DECIMAL(4,1) COMMENT 'g/dL',
+    hematocrit DECIMAL(4,1) COMMENT '%',
+
+    collected_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (admission_id) REFERENCES admission(admission_id) ON DELETE CASCADE,
+    INDEX idx_gas_admission (admission_id),
+    INDEX idx_gas_timepoint (timepoint)
+);
+
+-- =============================================================================
+-- PRE-ADMISSION MEDICATIONS
+-- =============================================================================
+
+CREATE TABLE pre_admission_medications (
+    med_id INT PRIMARY KEY AUTO_INCREMENT,
+    admission_id INT NOT NULL UNIQUE,
+
+    -- Anticoagulants
+    warfarin TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
+    dabigatran TINYINT DEFAULT 0 COMMENT '0-No / 1-2x110 / 2-2x150',
+    apixaban TINYINT DEFAULT 0 COMMENT '0-No / 1-2x5 / 2-2x2.5',
+    rivaroxaban TINYINT DEFAULT 0 COMMENT '0-No / 1-20mg / 2-15mg / 3-2x2.5 / 4-2x15',
+    edoxaban TINYINT DEFAULT 0 COMMENT '0-No / 1-60mg / 2-30mg / 3-15mg',
+
+    -- Antiplatelets
+    aspirin TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes (ASK)',
+    clopidogrel TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
+    ticagrelor TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
+    prasugrel TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
+
+    -- Heart Failure Medications (0-No / 1-≤25% / 2-≤50% / 3->50% dose)
+    beta_blocker TINYINT DEFAULT 0,
+    ace_inhibitor TINYINT DEFAULT 0,
+    arb TINYINT DEFAULT 0,
+    arni TINYINT DEFAULT 0 COMMENT '0-No / 1-25% / 2-50% / 3-100%',
+    mra TINYINT DEFAULT 0,
+    sglt2_inhibitor TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
+
+    -- Diuretics
+    furosemide TINYINT DEFAULT 0 COMMENT '0-No / 1-≤40mg / 2-≤125mg / 3->125mg / 4->250mg',
+
+    -- Pulmonary Hypertension
+    sildenafil TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
+
+    -- Antiarrhythmics
+    flecainide TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
+    propafenone TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
+    verapamil_diltiazem TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
+    amiodarone TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
+    mexiletine TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
+    sotalol TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
+    dronedarone TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
+    other_antiarrhythmic TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
+
+    -- Lipid Lowering
+    statin TINYINT DEFAULT 0 COMMENT '0-No / 1-≤25% / 2-≤50% / 3->50%',
+    ezetimibe TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
+    pcsk9_inhibitor TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
+
+    -- Diabetes
+    metformin TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
+    insulin TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
+    dpp4_inhibitor TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
+    pioglitazone TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
+    sulfonylurea TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
+
+    -- Other
+    immunomodulator TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
+    corticosteroid_chronic TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
+    chemotherapy TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
+    inhaled_ics_lama_laba TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
+
+    FOREIGN KEY (admission_id) REFERENCES admission(admission_id) ON DELETE CASCADE
+);
+
+-- =============================================================================
+-- FOLLOW-UP (6h, 12h, 24h, daily for a week)
+-- =============================================================================
+
+CREATE TABLE follow_up (
+    followup_id INT PRIMARY KEY AUTO_INCREMENT,
+    admission_id INT NOT NULL,
+    timepoint VARCHAR(20) NOT NULL COMMENT '6h / 12h / 24h / day2 / day3...',
+
+    -- Reference to other data tables by timepoint
+    notes TEXT,
+    new_shock_event TINYINT DEFAULT 0 COMMENT 'New shock = new event / point 0',
+
+    recorded_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     recorded_by INT,
-    recorded_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     FOREIGN KEY (admission_id) REFERENCES admission(admission_id) ON DELETE CASCADE,
-    FOREIGN KEY (recorded_by) REFERENCES care_team_member(member_id),
-
-    INDEX idx_vital_admission (admission_id),
-    INDEX idx_vital_recorded (recorded_at)
+    INDEX idx_followup_admission (admission_id)
 );
 
-CREATE TABLE lab_result (
-    lab_id INT PRIMARY KEY AUTO_INCREMENT,
-    admission_id INT NOT NULL,
-    test_category ENUM('Hematology', 'Chemistry', 'Coagulation', 'Blood Gas', 'Microbiology', 'Cardiac', 'Other') NOT NULL,
-    test_name VARCHAR(100) NOT NULL,
-    value DECIMAL(10,4),
-    value_text VARCHAR(200),
-    unit VARCHAR(30),
-    reference_min DECIMAL(10,4),
-    reference_max DECIMAL(10,4),
-    is_abnormal BOOLEAN DEFAULT FALSE,
-    is_critical BOOLEAN DEFAULT FALSE,
-    collected_at DATETIME NOT NULL,
-    resulted_at DATETIME,
+-- =============================================================================
+-- OUTCOME
+-- =============================================================================
 
-    FOREIGN KEY (admission_id) REFERENCES admission(admission_id) ON DELETE CASCADE,
-
-    INDEX idx_lab_admission (admission_id),
-    INDEX idx_lab_date (collected_at)
-);
-
-CREATE TABLE medication (
-    medication_id INT PRIMARY KEY AUTO_INCREMENT,
-    admission_id INT NOT NULL,
-    drug_name VARCHAR(150) NOT NULL,
-    drug_class ENUM('Vasopressor', 'Inotrope', 'Antibiotic', 'Sedation', 'Analgesic', 'Anticoagulant', 'Diuretic', 'Insulin', 'PPI', 'Other') NOT NULL,
-    dose DECIMAL(10,4) NOT NULL,
-    dose_unit VARCHAR(30) NOT NULL,
-    route ENUM('IV', 'PO', 'IM', 'SC', 'Inhaled', 'Topical', 'Other') NOT NULL,
-    frequency VARCHAR(50) NOT NULL,
-    infusion_rate DECIMAL(10,4),
-    infusion_unit VARCHAR(30),
-    start_date DATETIME NOT NULL,
-    end_date DATETIME,
-    status ENUM('Active', 'Completed', 'Discontinued', 'On Hold') DEFAULT 'Active',
-
-    FOREIGN KEY (admission_id) REFERENCES admission(admission_id) ON DELETE CASCADE,
-
-    INDEX idx_med_admission (admission_id),
-    INDEX idx_med_status (status)
-);
-
-CREATE TABLE intervention (
-    intervention_id INT PRIMARY KEY AUTO_INCREMENT,
-    admission_id INT NOT NULL,
-    type ENUM('Intubation', 'Central Line', 'Arterial Line', 'Dialysis', 'ECMO', 'IABP', 'Impella', 'Cardioversion', 'Bronchoscopy', 'Chest Tube', 'Other') NOT NULL,
-    description TEXT,
-    performed_at DATETIME NOT NULL,
-    performed_by INT,
-    outcome ENUM('Successful', 'Complicated', 'Failed', 'Ongoing') DEFAULT 'Successful',
-    notes TEXT,
-
-    FOREIGN KEY (admission_id) REFERENCES admission(admission_id) ON DELETE CASCADE,
-    FOREIGN KEY (performed_by) REFERENCES care_team_member(member_id),
-
-    INDEX idx_intervention_admission (admission_id)
-);
-
-CREATE TABLE daily_checklist (
-    item_id INT PRIMARY KEY AUTO_INCREMENT,
-    admission_id INT NOT NULL,
-    checklist_date DATE NOT NULL,
-    category ENUM('Hemodynamic', 'Respiratory', 'Medication', 'Laboratory', 'Nutrition', 'Mobility', 'Skin', 'Lines', 'Communication', 'Other') NOT NULL,
-    task_name VARCHAR(200) NOT NULL,
-    is_completed BOOLEAN DEFAULT FALSE,
-    is_applicable BOOLEAN DEFAULT TRUE,
-    completed_at DATETIME,
-    completed_by INT,
-    notes TEXT,
-
-    FOREIGN KEY (admission_id) REFERENCES admission(admission_id) ON DELETE CASCADE,
-    FOREIGN KEY (completed_by) REFERENCES care_team_member(member_id),
-
-    INDEX idx_checklist_admission (admission_id),
-    INDEX idx_checklist_date (checklist_date)
-);
-
-CREATE TABLE admission_care_team (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    admission_id INT NOT NULL,
-    member_id INT NOT NULL,
-    role_in_care VARCHAR(100),
-    assigned_date DATE NOT NULL,
-    end_date DATE,
-    is_primary BOOLEAN DEFAULT FALSE,
-
-    FOREIGN KEY (admission_id) REFERENCES admission(admission_id) ON DELETE CASCADE,
-    FOREIGN KEY (member_id) REFERENCES care_team_member(member_id),
-
-    UNIQUE KEY unique_assignment (admission_id, member_id, assigned_date)
-);
-
--- =============================================
--- DISCHARGE
--- =============================================
-
-CREATE TABLE discharge (
-    discharge_id INT PRIMARY KEY AUTO_INCREMENT,
+CREATE TABLE outcome (
+    outcome_id INT PRIMARY KEY AUTO_INCREMENT,
     admission_id INT NOT NULL UNIQUE,
-    discharge_status ENUM('Alive', 'Deceased', 'Transferred', 'AMA', 'Hospice') NOT NULL,
-    outcome ENUM('Recovered', 'Improved', 'Unchanged', 'Deteriorated', 'Deceased') NOT NULL,
-    length_of_stay INT NOT NULL,
-    icu_days INT,
-    ventilator_days INT,
-    discharge_summary TEXT,
-    destination ENUM('Home', 'Rehab', 'Nursing Facility', 'Another Hospital', 'Morgue', 'Other') NOT NULL,
-    discharge_date DATETIME NOT NULL,
-    discharged_by INT,
-    mortality BOOLEAN DEFAULT FALSE,
-    mortality_cause VARCHAR(300),
-    follow_up_required BOOLEAN DEFAULT TRUE,
-    follow_up_date DATE,
 
-    FOREIGN KEY (admission_id) REFERENCES admission(admission_id) ON DELETE CASCADE,
-    FOREIGN KEY (discharged_by) REFERENCES physician(physician_id),
+    -- ICU Outcome
+    died_in_icu TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
+    transfer_from_icu TINYINT COMMENT '0-Ward / 1-Other ICU / 2-Palliative / 3-Higher center / 4-Smaller center',
+    icu_discharge_date DATE,
 
-    INDEX idx_discharge_outcome (outcome)
+    -- Hospital Outcome
+    died_in_hospital TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
+    inhospital_death_date DATE,
+
+    -- Discharge
+    discharge_destination TINYINT COMMENT '0-Home / 1-Palliative / 2-Other hospital',
+    hospital_discharge_date DATE,
+
+    -- Calculated
+    length_of_stay_icu INT COMMENT 'Days in ICU',
+    length_of_stay_hospital INT COMMENT 'Total hospital days',
+
+    FOREIGN KEY (admission_id) REFERENCES admission(admission_id) ON DELETE CASCADE
 );
 
--- =============================================
--- AUDIT & ACCESS LOGS
--- =============================================
+-- =============================================================================
+-- AUDIT LOG
+-- =============================================================================
 
 CREATE TABLE audit_log (
     log_id INT PRIMARY KEY AUTO_INCREMENT,
@@ -456,178 +543,46 @@ CREATE TABLE audit_log (
     ip_address VARCHAR(45)
 );
 
-CREATE TABLE identity_access_log (
-    access_id INT PRIMARY KEY AUTO_INCREMENT,
-    patient_id INT NOT NULL,
-    accessed_by INT NOT NULL,
-    access_reason VARCHAR(300) NOT NULL,
-    accessed_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    ip_address VARCHAR(45),
-
-    FOREIGN KEY (patient_id) REFERENCES patient(patient_id),
-    FOREIGN KEY (accessed_by) REFERENCES admin_user(admin_id),
-
-    INDEX idx_access_patient (patient_id),
-    INDEX idx_access_date (accessed_at)
-);
-
--- =============================================
--- STORED PROCEDURES
--- =============================================
-
-DELIMITER //
-
--- Generate unique pseudonym for new patient
-CREATE PROCEDURE generate_pseudonym(OUT new_pseudonym VARCHAR(50))
-BEGIN
-    DECLARE prefix VARCHAR(10);
-    DECLARE num INT;
-    DECLARE suffix VARCHAR(4);
-
-    -- Get random prefix
-    SELECT ps.prefix, ps.last_number + 1 INTO prefix, num
-    FROM pseudonym_sequence ps
-    ORDER BY RAND()
-    LIMIT 1
-    FOR UPDATE;
-
-    -- Update sequence
-    UPDATE pseudonym_sequence SET last_number = num WHERE prefix = prefix;
-
-    -- Generate random suffix
-    SET suffix = CONCAT(
-        CHAR(65 + FLOOR(RAND() * 26)),
-        FLOOR(RAND() * 10),
-        CHAR(65 + FLOOR(RAND() * 26)),
-        FLOOR(RAND() * 10)
-    );
-
-    SET new_pseudonym = CONCAT(prefix, '-', num, suffix);
-END //
-
--- Generate QR code identifier
-CREATE PROCEDURE generate_qr_code(OUT qr_code VARCHAR(100))
-BEGIN
-    SET qr_code = CONCAT(
-        'NSN-',
-        DATE_FORMAT(NOW(), '%Y%m'),
-        '-',
-        UUID_SHORT()
-    );
-END //
-
--- Check if hospital subscription is valid
-CREATE FUNCTION is_subscription_valid(p_hospital_id INT)
-RETURNS BOOLEAN
-DETERMINISTIC
-BEGIN
-    DECLARE is_valid BOOLEAN DEFAULT FALSE;
-
-    SELECT
-        (is_active = TRUE
-         AND CURDATE() BETWEEN start_date AND end_date
-         AND current_month_submissions < max_monthly_submissions)
-    INTO is_valid
-    FROM icu_subscription
-    WHERE hospital_id = p_hospital_id
-    AND is_active = TRUE
-    LIMIT 1;
-
-    RETURN COALESCE(is_valid, FALSE);
-END //
-
--- Evaluate admission criteria and calculate score
-CREATE PROCEDURE evaluate_admission_criteria(IN p_admission_id INT)
-BEGIN
-    DECLARE total_score INT DEFAULT 0;
-    DECLARE mandatory_met BOOLEAN DEFAULT TRUE;
-    DECLARE all_met BOOLEAN DEFAULT TRUE;
-
-    -- Calculate total score
-    SELECT
-        SUM(CASE WHEN cc.is_met THEN ac.weight ELSE 0 END),
-        MIN(CASE WHEN ac.is_mandatory AND NOT cc.is_met THEN FALSE ELSE TRUE END),
-        MIN(cc.is_met)
-    INTO total_score, mandatory_met, all_met
-    FROM criteria_checklist cc
-    JOIN admission_criteria ac ON cc.criteria_id = ac.criteria_id
-    WHERE cc.admission_id = p_admission_id;
-
-    -- Update admission
-    UPDATE admission
-    SET
-        criteria_score = COALESCE(total_score, 0),
-        mandatory_criteria_met = COALESCE(mandatory_met, FALSE),
-        criteria_met = COALESCE(mandatory_met, FALSE)
-    WHERE admission_id = p_admission_id;
-END //
-
-DELIMITER ;
-
--- =============================================
--- VIEWS
--- =============================================
-
-CREATE VIEW v_active_subscriptions AS
-SELECT
-    h.hospital_id,
-    h.name AS hospital_name,
-    h.city,
-    s.subscription_id,
-    s.subscription_tier,
-    s.start_date,
-    s.end_date,
-    s.max_monthly_submissions,
-    s.current_month_submissions,
-    (s.max_monthly_submissions - s.current_month_submissions) AS remaining_submissions
-FROM hospital h
-JOIN icu_subscription s ON h.hospital_id = s.hospital_id
-WHERE s.is_active = TRUE
-AND CURDATE() BETWEEN s.start_date AND s.end_date;
+-- =============================================================================
+-- VIEWS FOR REPORTING
+-- =============================================================================
 
 CREATE VIEW v_active_admissions AS
 SELECT
     a.admission_id,
     a.case_number,
-    p.pseudonym,
-    p.qr_code,
+    p.patient_code,
+    p.age,
     p.gender,
-    p.date_of_birth,
-    h.name AS hospital_name,
-    iu.name AS icu_name,
-    sa.shock_type,
-    sa.scai_stage,
-    a.bed_number,
-    a.admission_date,
-    a.status,
-    a.criteria_score,
-    a.criteria_met
+    a.date_of_admission,
+    a.date_of_shock_onset,
+    sc.shock_cardiogenic,
+    sc.scai_classification,
+    sc.shock_distributive,
+    sc.shock_hypovolemic,
+    sc.shock_obstructive,
+    sc.shock_mixed,
+    sc.sofa_score,
+    a.status
 FROM admission a
 JOIN patient p ON a.patient_id = p.patient_id
-JOIN icu_subscription s ON a.subscription_id = s.subscription_id
-JOIN hospital h ON s.hospital_id = h.hospital_id
-JOIN icu_unit iu ON a.icu_id = iu.icu_id
-LEFT JOIN shock_assessment sa ON a.admission_id = sa.admission_id
+LEFT JOIN shock_classification sc ON a.admission_id = sc.admission_id
 WHERE a.status IN ('Admitted', 'Approved')
-ORDER BY a.admission_date DESC;
+ORDER BY a.date_of_admission DESC;
 
-CREATE VIEW v_pending_approvals AS
+CREATE VIEW v_outcome_summary AS
 SELECT
-    a.admission_id,
-    a.case_number,
-    p.pseudonym,
-    h.name AS hospital_name,
-    CONCAT(ph.first_name, ' ', ph.last_name) AS submitting_physician,
-    a.submission_date,
-    a.criteria_score,
-    a.mandatory_criteria_met,
-    sa.shock_type,
-    sa.scai_stage
+    sc.shock_cardiogenic,
+    sc.scai_classification,
+    sc.shock_distributive,
+    sc.shock_hypovolemic,
+    COUNT(*) as total_cases,
+    SUM(o.died_in_icu) as icu_deaths,
+    SUM(o.died_in_hospital) as hospital_deaths,
+    ROUND(AVG(o.length_of_stay_icu), 1) as avg_icu_los,
+    ROUND(AVG(o.length_of_stay_hospital), 1) as avg_hospital_los,
+    ROUND(SUM(o.died_in_hospital) / COUNT(*) * 100, 1) as mortality_rate
 FROM admission a
-JOIN patient p ON a.patient_id = p.patient_id
-JOIN icu_subscription s ON a.subscription_id = s.subscription_id
-JOIN hospital h ON s.hospital_id = h.hospital_id
-JOIN physician ph ON a.physician_id = ph.physician_id
-LEFT JOIN shock_assessment sa ON a.admission_id = sa.admission_id
-WHERE a.status IN ('Pending', 'Under Review')
-ORDER BY a.submission_date ASC;
+JOIN shock_classification sc ON a.admission_id = sc.admission_id
+JOIN outcome o ON a.admission_id = o.admission_id
+GROUP BY sc.shock_cardiogenic, sc.scai_classification, sc.shock_distributive, sc.shock_hypovolemic;
