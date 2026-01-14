@@ -1,0 +1,171 @@
+%%{init: {'theme': 'base', 'themeVariables': { 'fontSize': '13px'}}}%%
+flowchart TB
+    %% ============================================
+    %% WORKFLOW SWIMLANES - ACTOR RESPONSIBILITIES
+    %% National Shock Net ICU
+    %% Shows handoffs between: Admin | Hospital | System | ICU Staff
+    %% ============================================
+
+    subgraph Admin["👤 ADMIN"]
+        AD1[Review Subscription Request]
+        AD2{Approve?}
+        AD3[Activate Subscription]
+        AD4[Review Patient Case]
+        AD5{Case Decision}
+        AD6[Approve & Generate Case #]
+        AD7[Reject with Reason]
+        AD8[Request More Info]
+        AD9[Monitor Network Dashboard]
+    end
+
+    subgraph Hospital["🏥 HOSPITAL / PHYSICIAN"]
+        H1([Request Subscription])
+        H2[Receive Subscription Status]
+        H3([Submit New Patient])
+        H4[Enter Clinical Data]
+        H5[Upload Documents]
+        H6[Track Patient Status]
+        H7[Receive Case Decision]
+        H8[Provide Additional Info]
+        H9[Initiate ICU Admission]
+        H10[Assign Bed & Care Team]
+    end
+
+    subgraph System["⚙️ SYSTEM (AUTOMATED)"]
+        S1[Validate Subscription]
+        S2[/"Generate Pseudonym<br/>ALPHA-XXXXXX"/]
+        S3[/"Generate QR Code<br/>NSN-XXXXXX"/]
+        S4[/"Encrypt Patient Identity<br/>AES-256"/]
+        S5[Evaluate Admission Criteria]
+        S6[Calculate Criteria Score]
+        S7[Send Notifications]
+        S8[Record to Audit Log]
+    end
+
+    subgraph ICUStaff["👨‍⚕️ ICU STAFF"]
+        I1[Scan Patient QR Code]
+        I2[Perform Daily Rounds]
+        I3[Enter Monitoring Data]
+        I4[Update Clinical Status]
+        I5[Assess Discharge Readiness]
+        I6[Complete Discharge Summary]
+        I7[Record Final Outcome]
+    end
+
+    %% ============================================
+    %% STAGE 0: SUBSCRIPTION FLOW
+    %% ============================================
+    H1 --> AD1
+    AD1 --> AD2
+    AD2 -->|Yes| AD3
+    AD2 -->|No| AD7
+    AD3 --> S7
+    AD7 --> S7
+    S7 -->|Notify| H2
+
+    %% ============================================
+    %% STAGE 1: PATIENT SUBMISSION
+    %% ============================================
+    H3 --> S1
+    S1 -->|Valid| S2
+    S2 --> S3
+    S3 --> S4
+    S4 --> H4
+    H4 --> H5
+    H5 --> S5
+
+    %% ============================================
+    %% STAGE 2: CRITERIA EVALUATION
+    %% ============================================
+    S5 --> S6
+    S6 --> S7
+    S7 -->|Notify Admin| AD4
+
+    %% ============================================
+    %% STAGE 3: ADMIN APPROVAL
+    %% ============================================
+    AD4 --> AD5
+    AD5 -->|Approve| AD6
+    AD5 -->|Reject| AD7
+    AD5 -->|Request Info| AD8
+    AD6 --> S7
+    AD8 --> S7
+    S7 -->|Notify Hospital| H7
+    H7 -->|Approved| H9
+    H7 -->|Info Needed| H8
+    H8 --> H5
+
+    %% ============================================
+    %% STAGE 4: ICU ADMISSION
+    %% ============================================
+    H9 --> H10
+    H10 --> S8
+    S8 --> I1
+
+    %% ============================================
+    %% STAGE 5: ICU MONITORING (Daily Loop)
+    %% ============================================
+    I1 --> I2
+    I2 --> I3
+    I3 --> I4
+    I4 --> S8
+    I4 -->|Daily| I2
+
+    %% ============================================
+    %% STAGE 6: DISCHARGE
+    %% ============================================
+    I4 -->|Ready| I5
+    I5 --> I6
+    I6 --> I7
+    I7 --> S8
+
+    %% ============================================
+    %% ADMIN MONITORING (Ongoing)
+    %% ============================================
+    S8 -.->|Analytics| AD9
+
+    %% ============================================
+    %% STYLING
+    %% ============================================
+
+    %% Admin nodes - blue tones
+    style AD1 fill:#BBDEFB,stroke:#1565C0
+    style AD2 fill:#FFF3E0,stroke:#E65100
+    style AD3 fill:#C8E6C9,stroke:#2E7D32
+    style AD4 fill:#BBDEFB,stroke:#1565C0
+    style AD5 fill:#FFF3E0,stroke:#E65100
+    style AD6 fill:#C8E6C9,stroke:#2E7D32
+    style AD7 fill:#FFCDD2,stroke:#C62828
+    style AD8 fill:#90CAF9,stroke:#1565C0
+    style AD9 fill:#64B5F6,stroke:#1565C0
+
+    %% Hospital nodes - green tones
+    style H1 fill:#E8F5E9,stroke:#2E7D32
+    style H2 fill:#C8E6C9,stroke:#388E3C
+    style H3 fill:#E8F5E9,stroke:#2E7D32
+    style H4 fill:#C8E6C9,stroke:#388E3C
+    style H5 fill:#C8E6C9,stroke:#388E3C
+    style H6 fill:#A5D6A7,stroke:#388E3C
+    style H7 fill:#C8E6C9,stroke:#388E3C
+    style H8 fill:#DCEDC8,stroke:#558B2F
+    style H9 fill:#81C784,stroke:#2E7D32
+    style H10 fill:#81C784,stroke:#2E7D32
+
+    %% System nodes - purple for anonymization, grey for others
+    style S1 fill:#ECEFF1,stroke:#546E7A
+    style S2 fill:#E1BEE7,stroke:#7B1FA2
+    style S3 fill:#E1BEE7,stroke:#7B1FA2
+    style S4 fill:#E1BEE7,stroke:#7B1FA2
+    style S5 fill:#ECEFF1,stroke:#546E7A
+    style S6 fill:#ECEFF1,stroke:#546E7A
+    style S7 fill:#B0BEC5,stroke:#546E7A
+    style S8 fill:#90A4AE,stroke:#455A64
+
+    %% ICU Staff nodes - teal tones
+    style I1 fill:#E1BEE7,stroke:#7B1FA2
+    style I2 fill:#B2DFDB,stroke:#00695C
+    style I3 fill:#80CBC4,stroke:#00695C
+    style I4 fill:#80CBC4,stroke:#00695C
+    style I5 fill:#4DB6AC,stroke:#00695C
+    style I6 fill:#4DB6AC,stroke:#00695C
+    style I7 fill:#26A69A,stroke:#00695C

@@ -1,0 +1,132 @@
+%%{init: {'theme': 'base', 'themeVariables': { 'fontSize': '14px'}}}%%
+flowchart TD
+    %% ============================================
+    %% ADMIN PERSPECTIVE WORKFLOW
+    %% National Shock Net ICU - Administrator View
+    %% ============================================
+
+    subgraph Dashboard["STAGE 0: ADMIN DASHBOARD"]
+        D1([Admin Login]) --> D2[Load Dashboard]
+        D2 --> D3[Network Statistics Panel]
+        D3 --> D4["📊 Overview<br/>Pending Approvals: X<br/>Active Patients: Y<br/>Hospitals Online: Z<br/>Subscriptions Expiring: W"]
+        D4 --> D5{Select Action}
+    end
+
+    subgraph SubscriptionMgmt["STAGE 1: SUBSCRIPTION MANAGEMENT"]
+        D5 -->|Subscriptions| S1[View Subscription Queue]
+        S1 --> S2{Pending<br/>Requests?}
+        S2 -->|No| S12[Return to Dashboard]
+        S12 --> D5
+        S2 -->|Yes| S3[Review Hospital Profile]
+        S3 --> S4[Verify Credentials & ICU Capacity]
+        S4 --> S5{Decision}
+        S5 -->|Approve| S6[Select Subscription Tier]
+        S6 --> S6a["Tiers:<br/>• Basic (10 patients/mo)<br/>• Standard (25 patients/mo)<br/>• Premium (50 patients/mo)<br/>• Unlimited"]
+        S6a --> S7[Set Contract Terms & Period]
+        S7 --> S8[Activate Subscription]
+        S8 --> S9[📧 Notify Hospital: APPROVED]
+        S9 --> S1
+        S5 -->|Reject| S10[Document Rejection Reason]
+        S10 --> S11[📧 Notify Hospital: REJECTED]
+        S11 --> S1
+    end
+
+    subgraph PatientApproval["STAGE 2: PATIENT CASE REVIEW"]
+        D5 -->|Cases| P1[View Pending Cases Queue]
+        P1 --> P2[Sort by: Urgency / Date / Hospital]
+        P2 --> P3["Select Case: ALPHA-XXXXXX<br/>(Anonymized View)"]
+        P3 --> P4[Review Anonymized Patient Data]
+        P4 --> P5["Check Admission Criteria:<br/>• MAP < 65 mmHg<br/>• SBP < 90 mmHg<br/>• Lactate > 2.0<br/>• SCAI Stage<br/>• Shock Type"]
+        P5 --> P6[Review Criteria Score]
+        P6 --> P7[View Supporting Documents]
+        P7 --> P8{Case Decision}
+        P8 -->|Approve| P9[Generate Case Number]
+        P9 --> P10[📧 Notify Hospital: APPROVED]
+        P10 --> P11[Patient Ready for ICU Admission]
+        P11 --> P1
+        P8 -->|Reject| P12[Document Rejection Reason]
+        P12 --> P13[📧 Notify Hospital: REJECTED]
+        P13 --> P1
+        P8 -->|Request Info| P14[Specify Required Information]
+        P14 --> P15[Return Case to Hospital]
+        P15 --> P16[Status: UNDER REVIEW]
+        P16 --> P1
+    end
+
+    subgraph Monitoring["STAGE 3: SYSTEM MONITORING"]
+        D5 -->|Monitor| M1[View All Hospitals]
+        M1 --> M2[Filter by Status / Region / Tier]
+        M2 --> M3[Select Hospital Details]
+        M3 --> M4["Hospital Stats:<br/>• Active Patients: N<br/>• Monthly Usage: X/Y<br/>• Subscription: Tier"]
+        M4 --> M5[View Subscription Status & Expiry]
+        M5 --> M6[Review Recent Activity Log]
+        M6 --> M7[System Health Check]
+        M7 --> M8{Issues Found?}
+        M8 -->|Yes| M9[Generate Alert Report]
+        M9 --> D5
+        M8 -->|No| M10[All Systems Normal]
+        M10 --> D5
+    end
+
+    subgraph Reports["STAGE 4: REPORTS & ANALYTICS"]
+        D5 -->|Reports| R1[Select Report Type]
+        R1 --> R2["Report Types:<br/>• Network Summary<br/>• Hospital Performance<br/>• Patient Outcomes<br/>• Subscription Revenue"]
+        R2 --> R3[Set Date Range & Filters]
+        R3 --> R4[Generate Report]
+        R4 --> R5[Export / Download]
+        R5 --> D5
+    end
+
+    %% ============================================
+    %% STYLING
+    %% ============================================
+
+    %% Dashboard - green tones
+    style D1 fill:#E8F5E9,stroke:#2E7D32
+    style D2 fill:#C8E6C9,stroke:#388E3C
+    style D3 fill:#C8E6C9,stroke:#388E3C
+    style D4 fill:#A5D6A7,stroke:#388E3C
+
+    %% Decision nodes - orange
+    style D5 fill:#FFF3E0,stroke:#E65100
+    style S2 fill:#FFF3E0,stroke:#E65100
+    style S5 fill:#FFF3E0,stroke:#E65100
+    style P8 fill:#FFF3E0,stroke:#E65100
+    style M8 fill:#FFF3E0,stroke:#E65100
+
+    %% Approval/Success - green
+    style S8 fill:#C8E6C9,stroke:#2E7D32
+    style S9 fill:#A5D6A7,stroke:#2E7D32
+    style P9 fill:#C8E6C9,stroke:#2E7D32
+    style P10 fill:#A5D6A7,stroke:#2E7D32
+    style P11 fill:#81C784,stroke:#2E7D32
+    style M10 fill:#C8E6C9,stroke:#2E7D32
+
+    %% Rejection - red
+    style S10 fill:#FFCDD2,stroke:#C62828
+    style S11 fill:#EF9A9A,stroke:#C62828
+    style P12 fill:#FFCDD2,stroke:#C62828
+    style P13 fill:#EF9A9A,stroke:#C62828
+
+    %% Anonymization highlight - purple
+    style P3 fill:#E1BEE7,stroke:#7B1FA2
+    style P4 fill:#E1BEE7,stroke:#7B1FA2
+
+    %% Request info / Under review - blue
+    style P14 fill:#E3F2FD,stroke:#1565C0
+    style P15 fill:#BBDEFB,stroke:#1565C0
+    style P16 fill:#90CAF9,stroke:#1565C0
+
+    %% Monitoring - teal
+    style M1 fill:#B2DFDB,stroke:#00695C
+    style M2 fill:#B2DFDB,stroke:#00695C
+    style M3 fill:#B2DFDB,stroke:#00695C
+    style M4 fill:#80CBC4,stroke:#00695C
+    style M9 fill:#FFCC80,stroke:#EF6C00
+
+    %% Reports - cyan
+    style R1 fill:#B2EBF2,stroke:#00838F
+    style R2 fill:#B2EBF2,stroke:#00838F
+    style R3 fill:#80DEEA,stroke:#00838F
+    style R4 fill:#80DEEA,stroke:#00838F
+    style R5 fill:#4DD0E1,stroke:#00838F

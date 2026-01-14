@@ -1,0 +1,183 @@
+%%{init: {'theme': 'base', 'themeVariables': { 'fontSize': '14px'}}}%%
+flowchart TD
+    %% ============================================
+    %% HOSPITAL/USER PERSPECTIVE WORKFLOW
+    %% National Shock Net ICU - Hospital Staff View
+    %% Focus: Patient Journey & Data Entry
+    %% ============================================
+
+    subgraph Auth["STAGE 0: AUTHENTICATION"]
+        A1([Hospital Portal Login]) --> A2{Valid<br/>Credentials?}
+        A2 -->|No| A3[Login Failed]
+        A3 --> A1
+        A2 -->|Yes| A4[Load Hospital Dashboard]
+    end
+
+    subgraph Dashboard["STAGE 1: HOSPITAL DASHBOARD"]
+        A4 --> B1["🏥 My Dashboard<br/>Hospital: [Name]<br/>Subscription: [Tier]<br/>Usage: X/Y patients"]
+        B1 --> B2{Select Action}
+        B2 -->|View Patients| B3[My Patients List]
+        B2 -->|New Patient| C1
+        B2 -->|Subscription| B4[View Subscription Details]
+        B4 --> B5["Subscription Info:<br/>• Tier: [Basic/Standard/Premium]<br/>• Expires: [Date]<br/>• Monthly Limit: X<br/>• Used This Month: Y"]
+        B5 --> B2
+    end
+
+    subgraph NewPatient["STAGE 2: SUBMIT NEW PATIENT"]
+        C1{Subscription<br/>Active?}
+        C1 -->|No| C2[❌ Subscription Expired<br/>Contact Admin to Renew]
+        C2 --> B2
+        C1 -->|Yes| C3{Monthly<br/>Limit OK?}
+        C3 -->|No| C4[❌ Monthly Limit Reached<br/>Wait or Request Upgrade]
+        C4 --> B2
+        C3 -->|Yes| C5[Enter Patient Identity<br/>Name, DOB, National ID]
+        C5 --> C6[/"🔐 ANONYMIZATION<br/>System automatically generates:<br/>• Pseudonym: ALPHA-XXXXXX<br/>• QR Code: NSN-YYYYMM-NNNNNN<br/>• Encrypted Identity Storage<br/>• National ID Hash"/]
+        C6 --> C7["✓ Patient Created<br/>ID: ALPHA-XXXXXX"]
+        C7 --> C8[Enter Clinical Data]
+        C8 --> C9["Hemodynamic Data:<br/>• MAP, SBP, DBP<br/>• Heart Rate<br/>• CVP, CO/CI<br/>• Lactate"]
+        C9 --> C10["Shock Classification:<br/>• Type: Cardiogenic/Septic/etc.<br/>• SCAI Stage: A-E<br/>• Onset Date"]
+        C10 --> C11[Upload Supporting Documents<br/>ECG, Labs, Echo Images]
+        C11 --> C12[Review Submission Summary]
+        C12 --> C13{Confirm<br/>Submit?}
+        C13 -->|No| C8
+        C13 -->|Yes| C14[Submit for Admin Approval]
+        C14 --> C15["📤 Status: PENDING<br/>Awaiting Admin Review"]
+        C15 --> B3
+    end
+
+    subgraph Tracking["STAGE 3: TRACK PATIENT STATUS"]
+        B3 --> T1["Patient List:<br/>Filter by Status"]
+        T1 --> T2[Select Patient: ALPHA-XXXXXX]
+        T2 --> T3[View Current Status]
+        T3 --> T4{Status?}
+        T4 -->|Pending| T5["⏳ PENDING<br/>Awaiting Admin Review<br/>Submitted: [DateTime]"]
+        T5 --> B3
+        T4 -->|Under Review| T6["📝 UNDER REVIEW<br/>Admin Requested Info"]
+        T6 --> T7[View Requested Information]
+        T7 --> T8[Provide Additional Data]
+        T8 --> C14
+        T4 -->|Rejected| T9["❌ REJECTED<br/>Reason: [Documented]"]
+        T9 --> T10{Action?}
+        T10 -->|Close Case| B3
+        T10 -->|New Submission| C5
+        T4 -->|Approved| T11["✓ APPROVED<br/>Case #: [Generated]<br/>Ready for ICU Admission"]
+        T11 --> T12[Proceed to Admission]
+        T4 -->|Admitted| T13["🏨 IN ICU CARE<br/>Bed: [Unit/Bed]<br/>Day: [N]"]
+        T13 --> E1
+        T4 -->|Discharged| T14["📋 DISCHARGED<br/>Outcome: [Status]<br/>LOS: [Days]"]
+        T14 --> T15[View Case Summary]
+        T15 --> B3
+    end
+
+    subgraph Admission["STAGE 4: ICU ADMISSION"]
+        T12 --> AD1[Select ICU Unit]
+        AD1 --> AD2[Assign Bed Number]
+        AD2 --> AD3[Record Admission DateTime]
+        AD3 --> AD4["🏷️ Generate Wristband<br/>QR Code + Pseudonym<br/>(No Real Name)"]
+        AD4 --> AD5[Capture Initial Vitals]
+        AD5 --> AD6[Document Initial Assessment]
+        AD6 --> AD7[Assign Care Team]
+        AD7 --> AD8["✓ Patient Admitted<br/>Status: IN ICU CARE"]
+        AD8 --> B3
+    end
+
+    subgraph DailyEntry["STAGE 5: DAILY DATA ENTRY"]
+        E1["📱 Scan Patient QR Code"] --> E2["Load Patient: ALPHA-XXXXXX<br/>Day [N] in ICU"]
+        E2 --> E3{Select Data Type}
+        E3 -->|Hemodynamics| E4["Enter Hemodynamic Data:<br/>• MAP, SBP, DBP<br/>• HR, CVP<br/>• CO/CI, SVR<br/>• Lactate, ScvO2"]
+        E3 -->|Blood Gas| E5["Enter Blood Gas:<br/>• pH, PaCO2, PaO2<br/>• HCO3, BE<br/>• SaO2, FiO2<br/>• P/F Ratio"]
+        E3 -->|Ventilator| E6["Enter Ventilator Settings:<br/>• Mode: AC/SIMV/PS/CPAP<br/>• Vt, RR, PEEP<br/>• FiO2, I:E Ratio<br/>• Peak/Plateau Pressure"]
+        E3 -->|Labs| E7["Enter Lab Results:<br/>• CBC Panel<br/>• Chemistry Panel<br/>• Coagulation<br/>• Biomarkers"]
+        E3 -->|Echo| E8["Enter Echo Data:<br/>• LVEF, RVEF<br/>• Cardiac Output<br/>• Wall Motion<br/>• Valve Assessment"]
+        E3 -->|Notes| E9["Daily Progress Notes:<br/>• Clinical Summary<br/>• Plan Updates<br/>• Family Communication"]
+        E4 --> E10[Save Entry]
+        E5 --> E10
+        E6 --> E10
+        E7 --> E10
+        E8 --> E10
+        E9 --> E10
+        E10 --> E11{More Entries<br/>Today?}
+        E11 -->|Yes| E3
+        E11 -->|No| E12[Daily Entry Complete]
+        E12 --> B3
+    end
+
+    subgraph Discharge["STAGE 6: DISCHARGE & OUTCOMES"]
+        T13 --> O1{Ready for<br/>Discharge?}
+        O1 -->|No| E1
+        O1 -->|Yes| O2[Initiate Discharge Process]
+        O2 --> O3[Complete Discharge Summary]
+        O3 --> O4["Document Final Status:<br/>• Length of Stay<br/>• Total ICU Days<br/>• Final Diagnosis"]
+        O4 --> O5{Outcome}
+        O5 -->|Survived| O6["Discharge Destination:<br/>• Transfer to Ward<br/>• Transfer to Other Facility<br/>• Discharge Home"]
+        O5 -->|Deceased| O7["Document Mortality:<br/>• Date/Time of Death<br/>• Cause of Death<br/>• Autopsy: Y/N"]
+        O6 --> O8["📁 Case Archived<br/>Available for Research Analytics"]
+        O7 --> O8
+        O8 --> O9[View in Historical Records]
+        O9 --> B3
+    end
+
+    %% ============================================
+    %% STYLING
+    %% ============================================
+
+    %% Authentication - green
+    style A1 fill:#E8F5E9,stroke:#2E7D32
+    style A4 fill:#C8E6C9,stroke:#388E3C
+    style A3 fill:#FFCDD2,stroke:#C62828
+
+    %% Dashboard
+    style B1 fill:#E3F2FD,stroke:#1565C0
+    style B5 fill:#E3F2FD,stroke:#1565C0
+
+    %% Decisions - orange
+    style A2 fill:#FFF3E0,stroke:#E65100
+    style B2 fill:#FFF3E0,stroke:#E65100
+    style C1 fill:#FFF3E0,stroke:#E65100
+    style C3 fill:#FFF3E0,stroke:#E65100
+    style C13 fill:#FFF3E0,stroke:#E65100
+    style T4 fill:#FFF3E0,stroke:#E65100
+    style T10 fill:#FFF3E0,stroke:#E65100
+    style E3 fill:#FFF3E0,stroke:#E65100
+    style E11 fill:#FFF3E0,stroke:#E65100
+    style O1 fill:#FFF3E0,stroke:#E65100
+    style O5 fill:#FFF3E0,stroke:#E65100
+
+    %% Anonymization - purple (KEY FEATURE)
+    style C6 fill:#E1BEE7,stroke:#7B1FA2
+    style C7 fill:#CE93D8,stroke:#7B1FA2
+    style E1 fill:#E1BEE7,stroke:#7B1FA2
+    style E2 fill:#CE93D8,stroke:#7B1FA2
+    style AD4 fill:#E1BEE7,stroke:#7B1FA2
+
+    %% Errors/Limits - red
+    style C2 fill:#FFCDD2,stroke:#C62828
+    style C4 fill:#FFCDD2,stroke:#C62828
+    style T9 fill:#FFCDD2,stroke:#C62828
+
+    %% Success states - green
+    style T11 fill:#C8E6C9,stroke:#2E7D32
+    style T12 fill:#A5D6A7,stroke:#2E7D32
+    style AD8 fill:#C8E6C9,stroke:#2E7D32
+    style O8 fill:#C8E6C9,stroke:#2E7D32
+
+    %% Pending/Info states - blue
+    style C15 fill:#E3F2FD,stroke:#1565C0
+    style T5 fill:#E3F2FD,stroke:#1565C0
+    style T6 fill:#BBDEFB,stroke:#1565C0
+
+    %% In ICU - teal
+    style T13 fill:#B2DFDB,stroke:#00695C
+
+    %% Data entry types - various
+    style E4 fill:#FFECB3,stroke:#FF8F00
+    style E5 fill:#F8BBD9,stroke:#C2185B
+    style E6 fill:#B3E5FC,stroke:#0277BD
+    style E7 fill:#DCEDC8,stroke:#558B2F
+    style E8 fill:#D1C4E9,stroke:#512DA8
+    style E9 fill:#CFD8DC,stroke:#455A64
+
+    %% Archive - grey
+    style O9 fill:#ECEFF1,stroke:#546E7A
+    style T14 fill:#ECEFF1,stroke:#546E7A
+    style T15 fill:#CFD8DC,stroke:#546E7A
