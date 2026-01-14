@@ -1,0 +1,115 @@
+flowchart TD
+    subgraph Subscription["0. ICU SUBSCRIPTION (Prerequisite)"]
+        SUB1[Hospital Requests Subscription] --> SUB2{Admin Reviews<br>Hospital}
+        SUB2 -->|Approve| SUB3[Select Subscription Tier]
+        SUB3 --> SUB4[Basic / Standard / Premium / Unlimited]
+        SUB4 --> SUB5[Set Contract Period & Limits]
+        SUB5 --> SUB6[Activate Subscription]
+        SUB6 --> SUB7[Hospital Can Submit Patients]
+        SUB2 -->|Reject| SUB8[Hospital Not Eligible]
+    end
+
+    subgraph Submission["1. PATIENT SUBMISSION"]
+        SUB7 --> A[Physician Initiates Submission]
+        A --> B{Subscription<br>Valid?}
+        B -->|No| B1[Subscription Expired<br>or Limit Reached]
+        B1 --> B2[Contact Admin to Renew]
+        B -->|Yes| C[Enter Patient Identity]
+        C --> D[/"ANONYMIZATION<br>Generate Pseudonym<br>Generate QR Code<br>Encrypt Identity"/]
+        D --> E[Patient Created as<br>ALPHA-142K7X]
+        E --> F[Enter Clinical Data]
+        F --> G[Upload Supporting Documents]
+    end
+
+    subgraph Criteria["2. ADMISSION CRITERIA EVALUATION"]
+        G --> H{Evaluate Mandatory<br>Criteria}
+        H --> I1[/"MAP < 65 mmHg?"/]
+        H --> I2[/"SBP < 90 mmHg?"/]
+        H --> I3[/"Lactate > 2.0?"/]
+        H --> I4[/"SCAI Stage?"/]
+        H --> I5[/"Shock Type?"/]
+        I1 --> J[Calculate Criteria Score]
+        I2 --> J
+        I3 --> J
+        I4 --> J
+        I5 --> J
+        J --> K{All Mandatory<br>Criteria Met?}
+        K -->|No| L[Return to Physician<br>Patient Does Not Meet Criteria]
+        L --> M{Physician<br>Appeals?}
+        M -->|Yes| N[Add Justification Notes]
+        N --> O[Submit for Review Anyway]
+        M -->|No| P[Submission Cancelled]
+        K -->|Yes| O
+    end
+
+    subgraph Approval["3. ADMIN APPROVAL"]
+        O --> Q[Notify Admin Team]
+        Q --> R[Admin Reviews Case]
+        R --> S[View Anonymized Patient:<br>ALPHA-142K7X]
+        S --> T[Review Criteria Score]
+        T --> U{Decision?}
+        U -->|Reject| V[Document Rejection Reason]
+        V --> W[Notify Submitting Hospital]
+        W --> X[Case Closed]
+        U -->|Request Info| Y[Request Additional Data]
+        Y --> F
+        U -->|Approve| Z[Generate Case Number]
+    end
+
+    subgraph Admission["4. PATIENT ADMISSION"]
+        Z --> AA[Select ICU Unit]
+        AA --> AB[Assign Bed Number]
+        AB --> AC[Record Admission DateTime]
+        AC --> AD[/"Patient Wristband:<br>QR Code + Pseudonym<br>No Real Name"/]
+        AD --> AE[Capture Initial Vitals]
+        AE --> AF[Document Shock Assessment]
+        AF --> AG[Record Medications]
+        AG --> AH[Log Initial Interventions]
+        AH --> AI[Assign Care Team]
+    end
+
+    subgraph Checklist["5. ICU DAILY CHECKLIST"]
+        AI --> AJ[Daily Rounds Begin]
+        AJ --> AK[Scan Patient QR Code]
+        AK --> AL[Load Patient: ALPHA-142K7X]
+        AL --> AM[Hemodynamic Monitoring]
+        AM --> AN[Ventilator Check]
+        AN --> AO[Medication Review]
+        AO --> AP[Lab Results Review]
+        AP --> AQ[Nutrition Assessment]
+        AQ --> AR[Mobility/PT Eval]
+        AR --> AS[Family Communication]
+        AS --> AT[Update Checklist Status]
+        AT --> AU{Patient Stable<br>for Discharge?}
+        AU -->|No| AJ
+        AU -->|Yes| AV[Initiate Discharge Plan]
+    end
+
+    subgraph Archive["6. DISCHARGE & ARCHIVE"]
+        AV --> AW[Complete Discharge Summary]
+        AW --> AX[Document Outcomes]
+        AX --> AY[Calculate Length of Stay]
+        AY --> AZ[Record Discharge Status]
+        AZ --> BA{Outcome}
+        BA -->|Survived| BB[Transfer/Home Discharge]
+        BA -->|Deceased| BC[Document Mortality Data]
+        BB --> BD[Archive Case]
+        BC --> BD
+        BD --> BE[/"Anonymized Data Available<br>for Research & Analytics<br>No Patient Identity Exposed"/]
+    end
+
+    %% Styling
+    style SUB1 fill:#E8F5E9
+    style SUB6 fill:#C8E6C9
+    style SUB8 fill:#FFCDD2
+    style D fill:#E1BEE7
+    style AD fill:#E1BEE7
+    style B fill:#FFF3E0
+    style K fill:#FFF3E0
+    style U fill:#FFF3E0
+    style AU fill:#FFF3E0
+    style BA fill:#FFF3E0
+    style X fill:#FFCDD2
+    style P fill:#FFCDD2
+    style BD fill:#E3F2FD
+    style BE fill:#E1BEE7

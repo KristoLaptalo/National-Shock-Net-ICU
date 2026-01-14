@@ -1,0 +1,61 @@
+flowchart TD
+    subgraph Morning["MORNING ROUNDS"]
+        A[Start Daily Assessment] --> B[Review Overnight Events]
+        B --> C[Check Vital Signs Trend]
+        C --> D[Review Hemodynamics]
+        D --> E[Assess Vasopressor Needs]
+    end
+
+    subgraph Monitoring["HEMODYNAMIC MONITORING"]
+        E --> F[MAP Target 65-70?]
+        F --> G[CVP Assessment]
+        G --> H[Cardiac Output/Index]
+        H --> I[ScvO2 / SvO2]
+        I --> J[Lactate Clearance]
+    end
+
+    subgraph Respiratory["RESPIRATORY"]
+        J --> K[Ventilator Settings]
+        K --> L[FiO2 / PEEP Review]
+        L --> M[ABG Analysis]
+        M --> N[Weaning Assessment]
+        N --> O[SAT / SBT Trial?]
+    end
+
+    subgraph Medications["MEDICATIONS"]
+        O --> P[Antibiotic Review]
+        P --> Q[Sedation Holiday?]
+        Q --> R[DVT Prophylaxis]
+        R --> S[Stress Ulcer Prophylaxis]
+        S --> T[Glycemic Control]
+    end
+
+    subgraph Labs["LABORATORY"]
+        T --> U[CBC / Chemistry]
+        U --> V[Coagulation Panel]
+        V --> W[Cultures if Needed]
+        W --> X[Trending Biomarkers]
+    end
+
+    subgraph Care["GENERAL CARE"]
+        X --> Y[Nutrition Status]
+        Y --> Z[Fluid Balance I/O]
+        Z --> AA[Skin Assessment]
+        AA --> AB[Line/Catheter Review]
+        AB --> AC[Mobilization Plan]
+    end
+
+    subgraph Communication["COMMUNICATION"]
+        AC --> AD[Update Care Plan]
+        AD --> AE[Family Discussion]
+        AE --> AF[Goals of Care Review]
+        AF --> AG[Document in System]
+        AG --> AH[End Daily Checklist]
+    end
+
+    %% Status indicators
+    style A fill:#4CAF50,color:#fff
+    style AH fill:#2196F3,color:#fff
+    style F fill:#FFC107
+    style O fill:#FFC107
+    style Q fill:#FFC107

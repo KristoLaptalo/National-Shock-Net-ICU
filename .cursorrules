@@ -1,0 +1,63 @@
+# National Shock Net ICU - AI Assistant Rules
+
+## Project Context
+This is a medical ICU patient management system for shock patients. All work must consider patient privacy, medical accuracy, and clinical workflows.
+
+## Domain Knowledge
+
+### Medical Terms
+- ICU: Intensive Care Unit
+- MAP: Mean Arterial Pressure (target ≥65 mmHg)
+- SCAI: Society for Cardiovascular Angiography and Interventions (shock staging A-E)
+- Shock types: Cardiogenic, Septic, Hypovolemic, Distributive, Obstructive
+- Hemodynamics: CVP, Cardiac Output, ScvO2, Lactate
+- Vasopressors: Norepinephrine, Epinephrine, Vasopressin, Dopamine
+
+### SCAI Shock Stages
+- A: At risk (no signs yet)
+- B: Beginning (hypotension, tachycardia)
+- C: Classic (hypoperfusion, lactate elevated)
+- D: Deteriorating (failing initial therapy)
+- E: Extremis (refractory, near death)
+
+## Technical Standards
+
+### Mermaid Diagrams
+- File extension: `.mmd`
+- Flowcharts: Use `flowchart TD` or `flowchart LR`
+- ER diagrams: Use `erDiagram`
+- Compile with: `mmdc -i input.mmd -o output.png -b white`
+- Use purple (#E1BEE7) for anonymization-related nodes
+- Use orange (#FFF3E0) for decision nodes
+- Use red (#FFCDD2) for rejection/error states
+- Use blue (#E3F2FD) for archive/completion states
+
+### SQL (MySQL)
+- Use AUTO_INCREMENT for primary keys
+- Use ENUM for fixed value sets (shock types, status, etc.)
+- Add COMMENT for units (mmHg, mmol/L, etc.)
+- Include created_at/updated_at timestamps
+- Use ON DELETE CASCADE for child tables
+- Create indexes on frequently queried columns
+
+### Patient Anonymization
+- NEVER store real patient names in plain text
+- Use pseudonyms format: PREFIX-NUMBERSUFFIX (e.g., ALPHA-142K7X)
+- Use QR codes format: NSN-YYYYMM-UNIQUEID
+- Encrypt identity with AES-256
+- Hash national IDs with SHA-256 for duplicate detection
+- Log all identity decryption access
+
+## Workflow Stages
+0. Subscribe (hospital subscription)
+1. Submit (patient anonymization)
+2. Criteria (admission evaluation)
+3. Approve (admin review)
+4. Admit (ICU assignment)
+5. Monitor (daily checklists)
+6. Archive (discharge & research)
+
+## File Locations
+- Workflows: `flowcharts/`
+- Database schemas: `er-diagrams/` and `sql/`
+- Compiled images: `output/`

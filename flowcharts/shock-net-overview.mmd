@@ -1,0 +1,23 @@
+flowchart LR
+    A[("0\nSUBSCRIBE")] --> B[("1\nSUBMIT")]
+    B --> C[("2\nCRITERIA")]
+    C --> D[("3\nAPPROVE")]
+    D --> E[("4\nADMIT")]
+    E --> F[("5\nMONITOR")]
+    F --> G[("6\nARCHIVE")]
+
+    A1[Hospital subscribes<br>to Shock Net] --> A
+    B1[Physician submits<br>+ Patient anonymized<br>QR + Pseudonym] --> B
+    C1[Evaluate criteria<br>MAP, Lactate, SCAI] --> C
+    D1[Admin reviews<br>anonymized case] --> D
+    E1[ICU admission<br>QR wristband] --> E
+    F1[Daily checklists<br>scan QR code] --> F
+    G1[Discharge &<br>research data] --> G
+
+    style A fill:#4CAF50,color:#fff
+    style B fill:#9C27B0,color:#fff
+    style C fill:#FF9800,color:#fff
+    style D fill:#2196F3,color:#fff
+    style E fill:#00BCD4,color:#fff
+    style F fill:#009688,color:#fff
+    style G fill:#607D8B,color:#fff

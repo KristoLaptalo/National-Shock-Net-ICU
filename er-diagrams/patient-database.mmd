@@ -1,0 +1,205 @@
+erDiagram
+    HOSPITAL ||--o| ICU_SUBSCRIPTION : has
+    HOSPITAL {
+        int hospital_id PK
+        string name
+        string city
+        string address
+        string phone
+        string type
+    }
+
+    ICU_SUBSCRIPTION {
+        int subscription_id PK
+        int hospital_id FK
+        string subscription_tier
+        date start_date
+        date end_date
+        boolean is_active
+        int max_beds
+        int max_monthly_submissions
+        string contract_number UK
+    }
+
+    HOSPITAL ||--o{ ICU_UNIT : operates
+    ICU_UNIT {
+        int icu_id PK
+        int hospital_id FK
+        string name
+        string type
+        int total_beds
+        boolean is_active
+    }
+
+    PHYSICIAN ||--o{ ADMISSION : submits
+    PHYSICIAN {
+        int physician_id PK
+        int hospital_id FK
+        string first_name
+        string last_name
+        string specialty
+        string license_number UK
+        string email
+    }
+
+    PATIENT ||--o{ ADMISSION : has
+    PATIENT {
+        int patient_id PK
+        string pseudonym UK
+        string qr_code UK
+        string encrypted_identity
+        date date_of_birth
+        string gender
+        string blood_type
+        string national_id_hash UK
+    }
+
+    ADMISSION_CRITERIA ||--o{ CRITERIA_CHECKLIST : defines
+    ADMISSION_CRITERIA {
+        int criteria_id PK
+        string category
+        string criteria_name
+        string description
+        string value_type
+        decimal threshold_min
+        decimal threshold_max
+        boolean is_mandatory
+        boolean is_active
+    }
+
+    ADMISSION ||--o{ CRITERIA_CHECKLIST : evaluates
+    CRITERIA_CHECKLIST {
+        int checklist_id PK
+        int admission_id FK
+        int criteria_id FK
+        decimal measured_value
+        boolean is_met
+        datetime evaluated_at
+        int evaluated_by FK
+    }
+
+    ICU_SUBSCRIPTION ||--o{ ADMISSION : allows
+    ADMISSION ||--|| SHOCK_ASSESSMENT : has
+    ADMISSION {
+        int admission_id PK
+        int patient_id FK
+        int subscription_id FK
+        int icu_id FK
+        int physician_id FK
+        int approved_by FK
+        string case_number UK
+        datetime submission_date
+        datetime admission_date
+        datetime discharge_date
+        string status
+        string bed_number
+        int criteria_score
+        boolean criteria_met
+    }
+
+    SHOCK_ASSESSMENT {
+        int assessment_id PK
+        int admission_id FK
+        string shock_type
+        string scai_stage
+        decimal lactate_level
+        decimal map
+        decimal cardiac_output
+        int heart_rate
+        boolean meets_criteria
+        text notes
+    }
+
+    ADMISSION ||--o{ VITAL_SIGNS : records
+    VITAL_SIGNS {
+        int vital_id PK
+        int admission_id FK
+        int heart_rate
+        int systolic_bp
+        int diastolic_bp
+        decimal map
+        int respiratory_rate
+        decimal temperature
+        int spo2
+        datetime recorded_at
+    }
+
+    ADMISSION ||--o{ LAB_RESULT : has
+    LAB_RESULT {
+        int lab_id PK
+        int admission_id FK
+        string test_category
+        string test_name
+        decimal value
+        string unit
+        boolean is_abnormal
+        datetime collected_at
+    }
+
+    ADMISSION ||--o{ MEDICATION : receives
+    MEDICATION {
+        int medication_id PK
+        int admission_id FK
+        string drug_name
+        string drug_class
+        decimal dose
+        string unit
+        string route
+        datetime start_date
+        datetime end_date
+        string status
+    }
+
+    ADMISSION ||--o{ INTERVENTION : undergoes
+    INTERVENTION {
+        int intervention_id PK
+        int admission_id FK
+        string type
+        string description
+        datetime performed_at
+        int performed_by FK
+        string outcome
+    }
+
+    ADMISSION ||--o{ DAILY_CHECKLIST : tracks
+    DAILY_CHECKLIST {
+        int item_id PK
+        int admission_id FK
+        int completed_by FK
+        string category
+        string task_name
+        boolean is_completed
+        datetime completed_at
+    }
+
+    ADMISSION }o--o{ CARE_TEAM_MEMBER : assigned
+    CARE_TEAM_MEMBER {
+        int member_id PK
+        string first_name
+        string last_name
+        string role
+        string department
+        string license_number
+    }
+
+    ADMIN_USER ||--o{ ADMISSION : approves
+    ADMIN_USER {
+        int admin_id PK
+        string username UK
+        string first_name
+        string last_name
+        string role
+        string email UK
+    }
+
+    ADMISSION ||--|| DISCHARGE : results_in
+    DISCHARGE {
+        int discharge_id PK
+        int admission_id FK
+        string discharge_status
+        string outcome
+        int length_of_stay
+        text discharge_summary
+        string destination
+        boolean mortality
+    }
