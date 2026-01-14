@@ -297,6 +297,45 @@ erDiagram
         decimal nt_probnp
     }
 
+    ADMISSION ||--o{ MCS : has
+    MCS {
+        int mcs_id PK
+        int admission_id FK
+        int iabp
+        int impella_25
+        int impella_cp
+        int impella_50
+        int impella_55
+        int impella_rp
+        int va_ecmo
+        int vv_ecmo
+        int ecpella
+        int tandemheart
+        int lvad
+        int rvad
+        int bivad
+        int tah
+        date insertion_date
+        int insertion_location
+        int access_site
+        int indication
+        string iabp_ratio
+        string impella_p_level
+        decimal impella_flow
+        decimal ecmo_flow
+        int ecmo_rpm
+        int ecmo_fio2
+        decimal ecmo_sweep
+        int complication_bleeding
+        int complication_hemolysis
+        int complication_limb_ischemia
+        int complication_thrombosis
+        int complication_stroke
+        int complication_infection
+        date removal_date
+        int removal_reason
+    }
+
     ADMISSION ||--|| PRE_ADMISSION_MEDS : has
     PRE_ADMISSION_MEDS {
         int med_id PK
