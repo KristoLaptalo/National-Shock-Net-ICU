@@ -398,8 +398,25 @@ erDiagram
     ADMIN_USER {
         int admin_id PK
         string username UK
+        string password_hash
         string first_name
         string last_name
         string role
         string email UK
+        boolean can_view_identity
+        boolean is_active
+    }
+
+    HOSPITAL ||--o{ PHYSICIAN : employs
+
+    AUDIT_LOG {
+        int log_id PK
+        string table_name
+        int record_id
+        string action
+        json old_values
+        json new_values
+        int performed_by
+        datetime performed_at
+        string ip_address
     }
