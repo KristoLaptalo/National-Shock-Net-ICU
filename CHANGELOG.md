@@ -2,6 +2,40 @@
 
 All notable changes to the National Shock Net ICU project will be documented in this file.
 
+## [0.6.0] - 2026-01-14
+
+### Added
+- **Ventilator Settings** table for mechanical ventilation data
+  - Support for Dräger, Servo, Hamilton devices
+  - Ventilation modes: CPAP, ASB, SIMV, PCV, VCV, BIPAP, APRV
+  - Pressure settings: PEEP, Pinsp, Ppeak, Pmean, Pplat
+  - Volume measurements: Vt, VTe, MV
+  - Lung mechanics: compliance (static/dynamic), resistance
+  - EtCO2 monitoring
+- **Laboratory Results** table with comprehensive lab data
+  - Complete Blood Count (RBC, Hgb, Hct, WBC differential)
+  - Coagulation: PT/INR, APTT, Fibrinogen, D-dimer
+  - Liver function: Bilirubin, AST, ALT, ALP, GGT, LDH
+  - Renal function: Urea, Creatinine, eGFR with KDIGO staging
+  - Cardiac markers: Troponin I/T, CK, CK-MB, BNP, NT-proBNP
+  - Inflammatory: CRP, Procalcitonin, IL-6, Ferritin
+  - Lipids, Thyroid, Proteins
+- **Enhanced Blood Gas** table with CO-oximetry
+  - Sample type tracking (Arterial/Venous/Mixed Venous)
+  - Analyzer model documentation
+  - CO-oximetry: tHb, O2Hb, COHb, MetHb, HHb
+  - Full derived values: tCO2, HCO3 (actual/standard), BE (ECF/Blood)
+  - P/F ratio calculation
+- **Enhanced Hemodynamic Data** with monitor integration
+  - NIBP and arterial line pressures
+  - CVP, EtCO2 monitoring
+  - Device model tracking
+- SQL views for latest blood gas and ventilator data
+- Sample data based on real ICU device outputs (GEM Premier 4000, Dräger Evita XL)
+
+### Changed
+- Updated ER diagram with 19 entities (added VENTILATOR_SETTINGS, LABORATORY_RESULTS)
+
 ## [0.5.0] - 2026-01-14
 
 ### Changed

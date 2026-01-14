@@ -134,14 +134,20 @@ erDiagram
         int hemo_id PK
         int admission_id FK
         string timepoint
-        int sap_invasive
-        int dap_invasive
-        int map_invasive
+        int nibp_systolic
+        int nibp_diastolic
+        int nibp_map
+        int art_systolic
+        int art_diastolic
+        int art_map
         int pulse
         string rhythm
         int respiratory_rate
         int spo2
+        int etco2
+        decimal cvp
         decimal temperature
+        string monitor_device
         datetime recorded_at
     }
 
@@ -201,21 +207,94 @@ erDiagram
         int gas_id PK
         int admission_id FK
         string timepoint
+        string sample_type
+        string analyzer_model
         decimal ph
-        decimal po2
         decimal pco2
+        decimal po2
         decimal sodium
         decimal potassium
-        decimal calcium
+        decimal chloride
+        decimal calcium_ionized
+        decimal glucose
         decimal lactate
-        decimal hco3
-        decimal base_excess
+        decimal thb
+        decimal o2hb
+        decimal cohb
+        decimal methb
+        decimal hhb
+        decimal so2_measured
+        decimal tco2
+        decimal hco3_actual
+        decimal hco3_standard
+        decimal be_ecf
+        decimal be_blood
+        decimal anion_gap
+        decimal pf_ratio
         decimal sao2
         decimal scvo2
         decimal svo2
+        datetime collected_at
+    }
+
+    ADMISSION ||--o{ VENTILATOR_SETTINGS : has
+    VENTILATOR_SETTINGS {
+        int vent_id PK
+        int admission_id FK
+        string timepoint
+        string device_manufacturer
+        string device_model
+        string vent_mode
+        int fio2
+        decimal peep
+        decimal ps_above_peep
+        decimal pinsp
+        decimal ppeak
+        decimal pmean
+        decimal pplat
+        decimal vt_set
+        decimal vt_measured
+        decimal vte
+        int rr_set
+        int rr_total
+        int rr_spontaneous
+        decimal mv_total
+        decimal mv_spontaneous
+        decimal compliance_static
+        decimal compliance_dynamic
+        decimal resistance
+        int etco2
+        datetime recorded_at
+    }
+
+    ADMISSION ||--o{ LABORATORY_RESULTS : has
+    LABORATORY_RESULTS {
+        int lab_id PK
+        int admission_id FK
+        string timepoint
+        datetime collected_at
+        decimal rbc
         decimal hemoglobin
         decimal hematocrit
-        datetime collected_at
+        decimal wbc
+        decimal neutrophils_abs
+        decimal lymphocytes_abs
+        decimal platelets
+        decimal pt_inr
+        decimal aptt
+        decimal fibrinogen
+        decimal d_dimer
+        decimal bilirubin_total
+        decimal ast
+        decimal alt
+        decimal urea
+        decimal creatinine
+        decimal egfr
+        decimal crp
+        decimal procalcitonin
+        decimal troponin_i
+        decimal bnp
+        decimal nt_probnp
     }
 
     ADMISSION ||--|| PRE_ADMISSION_MEDS : has
