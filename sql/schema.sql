@@ -1,6 +1,6 @@
 -- =============================================================================
 -- NATIONAL SHOCK NET ICU - COMPLETE DATABASE SCHEMA
--- Version: 0.6.0
+-- Version: 0.7.0
 -- Based on Clinical Registry: Shock.xlsx + OCR Data from ICU Devices
 -- =============================================================================
 
@@ -707,7 +707,73 @@ CREATE TABLE pre_admission_medications (
 );
 
 -- =============================================================================
--- 14. FOLLOW-UP (6h, 12h, 24h, daily)
+-- 14. MECHANICAL CIRCULATORY SUPPORT (MCS)
+-- =============================================================================
+
+CREATE TABLE mechanical_circulatory_support (
+    mcs_id INT PRIMARY KEY AUTO_INCREMENT,
+    admission_id INT NOT NULL,
+
+    -- Device Selection (multiple can be active)
+    iabp TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes: Intra-Aortic Balloon Pump',
+    impella_25 TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes: Impella 2.5',
+    impella_cp TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes: Impella CP',
+    impella_50 TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes: Impella 5.0',
+    impella_55 TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes: Impella 5.5',
+    impella_rp TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes: Impella RP',
+    va_ecmo TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes: Veno-Arterial ECMO',
+    vv_ecmo TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes: Veno-Venous ECMO',
+    ecpella TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes: ECMO + Impella combination',
+    tandemheart TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes: TandemHeart',
+    lvad TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes: Durable LVAD',
+    rvad TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes: RVAD',
+    bivad TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes: BiVAD',
+    tah TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes: Total Artificial Heart',
+
+    -- Insertion Details
+    insertion_date DATE,
+    insertion_location TINYINT COMMENT '1-Cath Lab / 2-OR / 3-ICU Bedside / 4-ED / 5-Other Hospital',
+    access_site TINYINT COMMENT '1-Femoral / 2-Axillary / 3-Subclavian / 4-Central',
+
+    -- Indication
+    indication TINYINT COMMENT '1-CS Support / 2-Bridge to Decision / 3-Bridge to Recovery / 4-Bridge to Transplant / 5-Bridge to LVAD / 6-High-Risk PCI / 7-Post-Cardiotomy / 8-Respiratory / 9-ECPR',
+
+    -- IABP Settings
+    iabp_ratio VARCHAR(5) COMMENT '1:1, 1:2, 1:3',
+
+    -- Impella Settings
+    impella_p_level VARCHAR(3) COMMENT 'P1-P9',
+    impella_flow DECIMAL(3,1) COMMENT 'L/min',
+
+    -- ECMO Settings
+    ecmo_flow DECIMAL(3,1) COMMENT 'L/min',
+    ecmo_rpm INT COMMENT 'Revolutions per minute',
+    ecmo_fio2 INT COMMENT 'Sweep gas FiO2 (%)',
+    ecmo_sweep DECIMAL(3,1) COMMENT 'Sweep gas flow (L/min)',
+
+    -- Complications
+    complication_bleeding TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
+    complication_hemolysis TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
+    complication_limb_ischemia TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
+    complication_thrombosis TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
+    complication_stroke TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
+    complication_infection TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
+    complication_migration TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
+    complication_vascular TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
+
+    -- Weaning/Removal
+    removal_date DATE,
+    removal_reason TINYINT COMMENT '1-Recovery / 2-Bridge to durable / 3-Transplant / 4-Death / 5-Complication / 6-Futility',
+
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME ON UPDATE CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (admission_id) REFERENCES admission(admission_id) ON DELETE CASCADE,
+    INDEX idx_mcs_admission (admission_id)
+);
+
+-- =============================================================================
+-- 15. FOLLOW-UP (6h, 12h, 24h, daily)
 -- =============================================================================
 
 CREATE TABLE follow_up (
@@ -726,7 +792,7 @@ CREATE TABLE follow_up (
 );
 
 -- =============================================================================
--- 15. OUTCOME
+-- 16. OUTCOME
 -- =============================================================================
 
 CREATE TABLE outcome (
@@ -754,7 +820,7 @@ CREATE TABLE outcome (
 );
 
 -- =============================================================================
--- 16. AUDIT LOG
+-- 17. AUDIT LOG
 -- =============================================================================
 
 CREATE TABLE audit_log (
