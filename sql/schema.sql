@@ -1,10 +1,13 @@
 -- =============================================================================
--- NATIONAL SHOCK NET ICU - DATABASE SCHEMA
--- Based on Clinical Registry: Shock.xlsx - PATIENT GENERAL DATA
+-- NATIONAL SHOCK NET ICU - COMPLETE DATABASE SCHEMA
+-- Version: 0.6.0
+-- Based on Clinical Registry: Shock.xlsx + OCR Data from ICU Devices
 -- =============================================================================
 
+SET FOREIGN_KEY_CHECKS = 0;
+
 -- =============================================================================
--- INFRASTRUCTURE TABLES
+-- 1. INFRASTRUCTURE TABLES
 -- =============================================================================
 
 CREATE TABLE hospital (
@@ -68,7 +71,7 @@ CREATE TABLE admin_user (
 );
 
 -- =============================================================================
--- PATIENT (ANONYMIZED)
+-- 2. PATIENT (ANONYMIZED)
 -- =============================================================================
 
 CREATE TABLE patient (
@@ -95,7 +98,7 @@ CREATE TABLE patient (
 );
 
 -- =============================================================================
--- ADMISSION (CENTRAL TABLE)
+-- 3. ADMISSION (CENTRAL TABLE)
 -- =============================================================================
 
 CREATE TABLE admission (
@@ -131,7 +134,7 @@ CREATE TABLE admission (
 );
 
 -- =============================================================================
--- MEDICAL HISTORY (COMORBIDITIES)
+-- 4. MEDICAL HISTORY (COMORBIDITIES)
 -- =============================================================================
 
 CREATE TABLE medical_history (
@@ -187,7 +190,7 @@ CREATE TABLE medical_history (
 );
 
 -- =============================================================================
--- WORKING DIAGNOSES AT ADMISSION
+-- 5. WORKING DIAGNOSES AT ADMISSION
 -- =============================================================================
 
 CREATE TABLE working_diagnosis (
@@ -233,7 +236,7 @@ CREATE TABLE working_diagnosis (
 );
 
 -- =============================================================================
--- SHOCK CLASSIFICATION
+-- 6. SHOCK CLASSIFICATION
 -- =============================================================================
 
 CREATE TABLE shock_classification (
@@ -270,7 +273,8 @@ CREATE TABLE shock_classification (
 );
 
 -- =============================================================================
--- HEMODYNAMIC DATA (Multiple timepoints: Admission, 6h, 12h, 24h, daily)
+-- 7. HEMODYNAMIC DATA (Multiple timepoints)
+-- Source: ICU Monitors (Drager Infinity, Philips, GE)
 -- =============================================================================
 
 CREATE TABLE hemodynamic_data (
@@ -278,14 +282,33 @@ CREATE TABLE hemodynamic_data (
     admission_id INT NOT NULL,
     timepoint VARCHAR(20) NOT NULL COMMENT 'admission / 6h / 12h / 24h / day2 / day3...',
 
-    sap_invasive INT COMMENT 'Systolic Arterial Pressure (mmHg)',
-    dap_invasive INT COMMENT 'Diastolic Arterial Pressure (mmHg)',
-    map_invasive INT COMMENT 'Mean Arterial Pressure (mmHg)',
+    -- Non-invasive BP
+    nibp_systolic INT COMMENT 'Non-invasive BP Systolic (mmHg)',
+    nibp_diastolic INT COMMENT 'Non-invasive BP Diastolic (mmHg)',
+    nibp_map INT COMMENT 'Non-invasive MAP (mmHg)',
+
+    -- Arterial Line
+    art_systolic INT COMMENT 'Arterial Line Systolic (mmHg)',
+    art_diastolic INT COMMENT 'Arterial Line Diastolic (mmHg)',
+    art_map INT COMMENT 'Arterial Line MAP (mmHg)',
+
+    -- Heart Rate & Rhythm
     pulse INT COMMENT 'Heart rate (bpm)',
     rhythm VARCHAR(50) COMMENT 'Cardiac rhythm',
+
+    -- Respiratory
     respiratory_rate INT COMMENT 'Breaths per minute',
     spo2 INT COMMENT 'Oxygen saturation (%)',
-    body_temperature DECIMAL(3,1) COMMENT 'Temperature (°C)',
+    etco2 INT COMMENT 'End-tidal CO2 (mmHg)',
+
+    -- Pressures
+    cvp DECIMAL(4,1) COMMENT 'Central Venous Pressure (mmHg)',
+
+    -- Temperature
+    body_temperature DECIMAL(3,1) COMMENT 'Temperature (C)',
+
+    -- Device Info
+    monitor_device VARCHAR(50) COMMENT 'Monitor model (e.g., Drager Infinity)',
 
     recorded_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 
@@ -295,7 +318,7 @@ CREATE TABLE hemodynamic_data (
 );
 
 -- =============================================================================
--- ECHOCARDIOGRAPHY
+-- 8. ECHOCARDIOGRAPHY
 -- =============================================================================
 
 CREATE TABLE echocardiography (
@@ -342,7 +365,7 @@ CREATE TABLE echocardiography (
 );
 
 -- =============================================================================
--- SWAN-GANZ CATHETER HEMODYNAMICS
+-- 9. SWAN-GANZ CATHETER HEMODYNAMICS
 -- =============================================================================
 
 CREATE TABLE swan_ganz (
@@ -364,7 +387,7 @@ CREATE TABLE swan_ganz (
     -- Cardiac Output
     co_thermodilution DECIMAL(4,2) COMMENT 'CO Thermodilution (L/min)',
     co_fick DECIMAL(4,2) COMMENT 'CO Fick method (L/min)',
-    cardiac_index DECIMAL(3,2) COMMENT 'Calculated (L/min/m²)',
+    cardiac_index DECIMAL(3,2) COMMENT 'Calculated (L/min/m2)',
     papi DECIMAL(4,2) COMMENT 'Pulmonary Artery Pulsatility Index - Calculated',
 
     performed_at DATETIME,
@@ -374,39 +397,66 @@ CREATE TABLE swan_ganz (
 );
 
 -- =============================================================================
--- BLOOD GAS / POINT-OF-CARE LABS
+-- 10. BLOOD GAS / POINT-OF-CARE LABS
+-- Source: GEM Premier 4000, Radiometer ABL, Siemens RAPIDPoint
 -- =============================================================================
 
 CREATE TABLE blood_gas (
     gas_id INT PRIMARY KEY AUTO_INCREMENT,
     admission_id INT NOT NULL,
-    timepoint VARCHAR(20) NOT NULL COMMENT 'admission / 6h / 12h / 24h...',
+    timepoint VARCHAR(20) NOT NULL COMMENT 'admission / 6h / 12h / 24h / dayX',
 
-    -- Blood Gas
+    -- Sample Info
+    sample_type ENUM('Arterial', 'Venous', 'Mixed Venous', 'Capillary') DEFAULT 'Arterial',
+    sample_datetime DATETIME,
+    analyzer_model VARCHAR(50) COMMENT 'GEM Premier 4000, ABL800, etc.',
+
+    -- Measured Values - Blood Gas
     ph DECIMAL(4,3),
-    po2 DECIMAL(5,1) COMMENT 'mmHg',
-    pco2 DECIMAL(5,1) COMMENT 'mmHg',
+    pco2 DECIMAL(5,1) COMMENT 'Partial pressure CO2',
+    pco2_unit ENUM('mmHg', 'kPa') DEFAULT 'kPa',
+    po2 DECIMAL(5,1) COMMENT 'Partial pressure O2',
+    po2_unit ENUM('mmHg', 'kPa') DEFAULT 'kPa',
 
-    -- Electrolytes
-    sodium DECIMAL(5,1) COMMENT 'mmol/L',
-    potassium DECIMAL(3,1) COMMENT 'mmol/L',
-    calcium DECIMAL(3,2) COMMENT 'mmol/L',
+    -- Measured Values - Electrolytes
+    sodium DECIMAL(5,1) COMMENT 'Na+ (mmol/L)',
+    potassium DECIMAL(4,2) COMMENT 'K+ (mmol/L)',
+    chloride DECIMAL(5,1) COMMENT 'Cl- (mmol/L)',
+    calcium_ionized DECIMAL(4,3) COMMENT 'Ca++ ionized (mmol/L)',
 
-    -- Metabolic
-    lactate DECIMAL(4,2) COMMENT 'mmol/L',
-    hco3 DECIMAL(4,1) COMMENT 'mmol/L',
-    base_excess DECIMAL(4,1) COMMENT 'mEq/L',
+    -- Measured Values - Metabolites
+    glucose DECIMAL(5,2) COMMENT 'Glucose (mmol/L)',
+    lactate DECIMAL(4,2) COMMENT 'Lactate (mmol/L)',
 
-    -- Oxygen Saturations
+    -- CO-Oximetry (from GEM Premier)
+    thb DECIMAL(5,1) COMMENT 'Total Hemoglobin (g/L)',
+    o2hb DECIMAL(5,1) COMMENT 'Oxyhemoglobin (%)',
+    cohb DECIMAL(4,1) COMMENT 'Carboxyhemoglobin (%)',
+    methb DECIMAL(4,1) COMMENT 'Methemoglobin (%)',
+    hhb DECIMAL(4,1) COMMENT 'Deoxyhemoglobin (%)',
+    so2_measured DECIMAL(5,1) COMMENT 'Oxygen Saturation measured (%)',
+
+    -- Derived/Calculated Values
+    tco2 DECIMAL(4,1) COMMENT 'Total CO2 (mmol/L)',
+    hco3_actual DECIMAL(4,1) COMMENT 'Actual Bicarbonate (mmol/L)',
+    hco3_standard DECIMAL(4,1) COMMENT 'Standard Bicarbonate (mmol/L)',
+    be_ecf DECIMAL(4,1) COMMENT 'Base Excess ECF (mmol/L)',
+    be_blood DECIMAL(4,1) COMMENT 'Base Excess Blood (mmol/L)',
+    anion_gap DECIMAL(4,1) COMMENT 'Anion Gap (mmol/L)',
+    ca_corrected DECIMAL(4,3) COMMENT 'Ca++ corrected to pH 7.4 (mmol/L)',
+    so2_calculated DECIMAL(5,1) COMMENT 'Oxygen Saturation calculated (%)',
+    hct_calculated DECIMAL(4,1) COMMENT 'Hematocrit calculated (%)',
+
+    -- P/F Ratio (calculated)
+    pf_ratio DECIMAL(5,1) COMMENT 'PaO2/FiO2 ratio',
+
+    -- Saturations from different sources
     sao2 DECIMAL(4,1) COMMENT 'Arterial saturation (%)',
-    scvo2 DECIMAL(4,1) COMMENT 'Central venous saturation (%) - from CVC',
-    svo2 DECIMAL(4,1) COMMENT 'Mixed venous saturation (%) - from S-G',
-
-    -- Hematology
-    hemoglobin DECIMAL(4,1) COMMENT 'g/dL',
-    hematocrit DECIMAL(4,1) COMMENT '%',
+    scvo2 DECIMAL(4,1) COMMENT 'Central venous O2 sat (%) - from CVC',
+    svo2 DECIMAL(4,1) COMMENT 'Mixed venous O2 sat (%) - from PA catheter',
 
     collected_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    collected_by INT,
 
     FOREIGN KEY (admission_id) REFERENCES admission(admission_id) ON DELETE CASCADE,
     INDEX idx_gas_admission (admission_id),
@@ -414,7 +464,184 @@ CREATE TABLE blood_gas (
 );
 
 -- =============================================================================
--- PRE-ADMISSION MEDICATIONS
+-- 11. VENTILATOR SETTINGS
+-- Source: Drager Evita XL, Servo-i, Hamilton, etc.
+-- =============================================================================
+
+CREATE TABLE ventilator_settings (
+    vent_id INT PRIMARY KEY AUTO_INCREMENT,
+    admission_id INT NOT NULL,
+    timepoint VARCHAR(20) NOT NULL COMMENT 'admission / 6h / 12h / 24h / dayX',
+
+    -- Device Info
+    device_manufacturer VARCHAR(50) COMMENT 'Drager, Servo, Hamilton, etc.',
+    device_model VARCHAR(50) COMMENT 'Evita XL, Servo-i, etc.',
+
+    -- Ventilation Mode
+    vent_mode VARCHAR(30) COMMENT 'CPAP, ASB, SIMV, PCV, VCV, BIPAP, APRV, etc.',
+    patient_type VARCHAR(20) DEFAULT 'Adult' COMMENT 'Adult / Pediatric / Neonatal',
+
+    -- Oxygenation Settings
+    fio2 INT COMMENT 'Fraction of Inspired O2 (%)',
+
+    -- Pressure Settings (cmH2O or mbar)
+    peep DECIMAL(4,1) COMMENT 'Positive End-Expiratory Pressure',
+    ps_above_peep DECIMAL(4,1) COMMENT 'Pressure Support / dPASB above PEEP',
+    pinsp DECIMAL(4,1) COMMENT 'Inspiratory Pressure (for PCV)',
+    ppeak DECIMAL(4,1) COMMENT 'Peak Airway Pressure - measured',
+    pmean DECIMAL(4,1) COMMENT 'Mean Airway Pressure - measured',
+    pplat DECIMAL(4,1) COMMENT 'Plateau Pressure - measured',
+
+    -- Volume Settings/Measurements (L or mL)
+    vt_set DECIMAL(5,3) COMMENT 'Tidal Volume Set (L)',
+    vt_measured DECIMAL(5,3) COMMENT 'Tidal Volume Measured/Inspired (L)',
+    vte DECIMAL(5,3) COMMENT 'Expired Tidal Volume (L)',
+
+    -- Rate Settings/Measurements
+    rr_set INT COMMENT 'Respiratory Rate Set (breaths/min)',
+    rr_total INT COMMENT 'Total Respiratory Rate - measured',
+    rr_spontaneous INT COMMENT 'Spontaneous Respiratory Rate',
+
+    -- Minute Ventilation (L/min)
+    mv_total DECIMAL(5,2) COMMENT 'Total Minute Volume',
+    mv_spontaneous DECIMAL(5,2) COMMENT 'Spontaneous Minute Volume',
+
+    -- Flow Settings
+    flow_trigger DECIMAL(4,2) COMMENT 'Flow Trigger (L/min)',
+    insp_time DECIMAL(3,2) COMMENT 'Inspiratory Time (s)',
+    ie_ratio VARCHAR(10) COMMENT 'I:E Ratio (e.g., 1:2)',
+    ramp_time DECIMAL(4,2) COMMENT 'Ramp/Rise Time (s)',
+
+    -- Lung Mechanics - Measured
+    compliance_static DECIMAL(5,1) COMMENT 'Static Compliance (mL/cmH2O)',
+    compliance_dynamic DECIMAL(5,1) COMMENT 'Dynamic Compliance (mL/cmH2O)',
+    resistance DECIMAL(5,1) COMMENT 'Airway Resistance (cmH2O/L/s)',
+
+    -- Monitoring
+    etco2 INT COMMENT 'End-tidal CO2 (mmHg)',
+    spo2_vent INT COMMENT 'SpO2 from ventilator (%)',
+
+    recorded_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    recorded_by INT,
+
+    FOREIGN KEY (admission_id) REFERENCES admission(admission_id) ON DELETE CASCADE,
+    INDEX idx_vent_admission (admission_id),
+    INDEX idx_vent_timepoint (timepoint)
+);
+
+-- =============================================================================
+-- 12. LABORATORY RESULTS
+-- Source: Hospital Laboratory Information System (LIS)
+-- =============================================================================
+
+CREATE TABLE laboratory_results (
+    lab_id INT PRIMARY KEY AUTO_INCREMENT,
+    admission_id INT NOT NULL,
+    timepoint VARCHAR(20) NOT NULL,
+    collected_at DATETIME,
+    resulted_at DATETIME,
+
+    -- COMPLETE BLOOD COUNT (CBC)
+    rbc DECIMAL(4,2) COMMENT 'Red Blood Cells (x10^12/L)',
+    hemoglobin DECIMAL(4,1) COMMENT 'Hemoglobin (g/L)',
+    hematocrit DECIMAL(5,3) COMMENT 'Hematocrit (L/L)',
+    mcv DECIMAL(5,1) COMMENT 'Mean Corpuscular Volume (fL)',
+    mch DECIMAL(4,1) COMMENT 'Mean Corpuscular Hemoglobin (pg)',
+    mchc DECIMAL(4,1) COMMENT 'Mean Corpuscular Hb Concentration (g/L)',
+    rdw DECIMAL(4,1) COMMENT 'Red Cell Distribution Width (%)',
+    reticulocytes DECIMAL(4,1) COMMENT 'Reticulocytes (%)',
+
+    -- WHITE BLOOD CELLS
+    wbc DECIMAL(5,2) COMMENT 'White Blood Cells (x10^9/L)',
+    neutrophils_pct DECIMAL(4,1) COMMENT 'Neutrophils (%)',
+    neutrophils_abs DECIMAL(5,2) COMMENT 'Neutrophils Absolute (x10^9/L)',
+    lymphocytes_pct DECIMAL(4,1) COMMENT 'Lymphocytes (%)',
+    lymphocytes_abs DECIMAL(4,2) COMMENT 'Lymphocytes Absolute (x10^9/L)',
+    monocytes_pct DECIMAL(4,1) COMMENT 'Monocytes (%)',
+    monocytes_abs DECIMAL(4,2) COMMENT 'Monocytes Absolute (x10^9/L)',
+    eosinophils_pct DECIMAL(4,1) COMMENT 'Eosinophils (%)',
+    eosinophils_abs DECIMAL(4,2) COMMENT 'Eosinophils Absolute (x10^9/L)',
+    basophils_pct DECIMAL(4,1) COMMENT 'Basophils (%)',
+    basophils_abs DECIMAL(4,2) COMMENT 'Basophils Absolute (x10^9/L)',
+
+    -- PLATELETS
+    platelets DECIMAL(5,0) COMMENT 'Platelets (x10^9/L)',
+    mpv DECIMAL(4,1) COMMENT 'Mean Platelet Volume (fL)',
+
+    -- COAGULATION
+    pt_seconds DECIMAL(4,1) COMMENT 'Prothrombin Time (s)',
+    pt_inr DECIMAL(4,2) COMMENT 'INR',
+    aptt DECIMAL(4,1) COMMENT 'Activated Partial Thromboplastin Time (s)',
+    fibrinogen DECIMAL(4,2) COMMENT 'Fibrinogen (g/L)',
+    d_dimer DECIMAL(6,2) COMMENT 'D-Dimer (mg/L FEU)',
+    antithrombin DECIMAL(5,1) COMMENT 'Antithrombin III (%)',
+
+    -- LIVER FUNCTION
+    bilirubin_total DECIMAL(5,1) COMMENT 'Total Bilirubin (umol/L)',
+    bilirubin_direct DECIMAL(5,1) COMMENT 'Direct Bilirubin (umol/L)',
+    ast DECIMAL(5,0) COMMENT 'AST/GOT (U/L)',
+    alt DECIMAL(5,0) COMMENT 'ALT/GPT (U/L)',
+    alp DECIMAL(5,0) COMMENT 'Alkaline Phosphatase (U/L)',
+    ggt DECIMAL(5,0) COMMENT 'Gamma-GT (U/L)',
+    ldh DECIMAL(5,0) COMMENT 'Lactate Dehydrogenase (U/L)',
+
+    -- RENAL FUNCTION
+    urea DECIMAL(5,1) COMMENT 'Urea/BUN (mmol/L)',
+    creatinine DECIMAL(5,0) COMMENT 'Creatinine (umol/L)',
+    egfr DECIMAL(5,1) COMMENT 'eGFR (mL/min/1.73m2)',
+    egfr_category VARCHAR(10) COMMENT 'KDIGO Category (G1-G5)',
+    uric_acid DECIMAL(5,0) COMMENT 'Uric Acid (umol/L)',
+
+    -- ELECTROLYTES (from lab, not blood gas)
+    sodium_lab DECIMAL(5,1) COMMENT 'Sodium (mmol/L)',
+    potassium_lab DECIMAL(4,2) COMMENT 'Potassium (mmol/L)',
+    chloride_lab DECIMAL(5,1) COMMENT 'Chloride (mmol/L)',
+    calcium_total DECIMAL(4,2) COMMENT 'Total Calcium (mmol/L)',
+    calcium_corrected DECIMAL(4,2) COMMENT 'Corrected Calcium (mmol/L)',
+    phosphate DECIMAL(4,2) COMMENT 'Phosphate (mmol/L)',
+    magnesium DECIMAL(4,2) COMMENT 'Magnesium (mmol/L)',
+
+    -- PROTEINS
+    total_protein DECIMAL(4,1) COMMENT 'Total Protein (g/L)',
+    albumin DECIMAL(4,1) COMMENT 'Albumin (g/L)',
+    globulin DECIMAL(4,1) COMMENT 'Globulin (g/L)',
+
+    -- INFLAMMATORY MARKERS
+    crp DECIMAL(6,1) COMMENT 'C-Reactive Protein (mg/L)',
+    procalcitonin DECIMAL(6,2) COMMENT 'Procalcitonin (ng/mL)',
+    il6 DECIMAL(7,1) COMMENT 'Interleukin-6 (pg/mL)',
+    ferritin DECIMAL(6,0) COMMENT 'Ferritin (ug/L)',
+
+    -- CARDIAC MARKERS
+    troponin_i DECIMAL(8,3) COMMENT 'Troponin I (ng/L)',
+    troponin_t DECIMAL(8,3) COMMENT 'Troponin T (ng/L)',
+    ck DECIMAL(6,0) COMMENT 'Creatine Kinase (U/L)',
+    ck_mb DECIMAL(5,1) COMMENT 'CK-MB (U/L)',
+    bnp DECIMAL(7,0) COMMENT 'BNP (pg/mL)',
+    nt_probnp DECIMAL(7,0) COMMENT 'NT-proBNP (pg/mL)',
+
+    -- GLUCOSE/METABOLIC
+    glucose_lab DECIMAL(5,2) COMMENT 'Glucose (mmol/L)',
+    hba1c DECIMAL(4,1) COMMENT 'HbA1c (%)',
+
+    -- LIPIDS
+    cholesterol_total DECIMAL(4,2) COMMENT 'Total Cholesterol (mmol/L)',
+    hdl DECIMAL(4,2) COMMENT 'HDL Cholesterol (mmol/L)',
+    ldl DECIMAL(4,2) COMMENT 'LDL Cholesterol (mmol/L)',
+    triglycerides DECIMAL(4,2) COMMENT 'Triglycerides (mmol/L)',
+
+    -- THYROID
+    tsh DECIMAL(6,3) COMMENT 'TSH (mIU/L)',
+    ft4 DECIMAL(4,1) COMMENT 'Free T4 (pmol/L)',
+    ft3 DECIMAL(4,2) COMMENT 'Free T3 (pmol/L)',
+
+    FOREIGN KEY (admission_id) REFERENCES admission(admission_id) ON DELETE CASCADE,
+    INDEX idx_lab_admission (admission_id),
+    INDEX idx_lab_timepoint (timepoint)
+);
+
+-- =============================================================================
+-- 13. PRE-ADMISSION MEDICATIONS
 -- =============================================================================
 
 CREATE TABLE pre_admission_medications (
@@ -434,7 +661,7 @@ CREATE TABLE pre_admission_medications (
     ticagrelor TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
     prasugrel TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
 
-    -- Heart Failure Medications (0-No / 1-≤25% / 2-≤50% / 3->50% dose)
+    -- Heart Failure Medications (0-No / 1-<=25% / 2-<=50% / 3->50% dose)
     beta_blocker TINYINT DEFAULT 0,
     ace_inhibitor TINYINT DEFAULT 0,
     arb TINYINT DEFAULT 0,
@@ -443,7 +670,7 @@ CREATE TABLE pre_admission_medications (
     sglt2_inhibitor TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
 
     -- Diuretics
-    furosemide TINYINT DEFAULT 0 COMMENT '0-No / 1-≤40mg / 2-≤125mg / 3->125mg / 4->250mg',
+    furosemide TINYINT DEFAULT 0 COMMENT '0-No / 1-<=40mg / 2-<=125mg / 3->125mg / 4->250mg',
 
     -- Pulmonary Hypertension
     sildenafil TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
@@ -459,7 +686,7 @@ CREATE TABLE pre_admission_medications (
     other_antiarrhythmic TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
 
     -- Lipid Lowering
-    statin TINYINT DEFAULT 0 COMMENT '0-No / 1-≤25% / 2-≤50% / 3->50%',
+    statin TINYINT DEFAULT 0 COMMENT '0-No / 1-<=25% / 2-<=50% / 3->50%',
     ezetimibe TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
     pcsk9_inhibitor TINYINT DEFAULT 0 COMMENT '0-No / 1-Yes',
 
@@ -480,7 +707,7 @@ CREATE TABLE pre_admission_medications (
 );
 
 -- =============================================================================
--- FOLLOW-UP (6h, 12h, 24h, daily for a week)
+-- 14. FOLLOW-UP (6h, 12h, 24h, daily)
 -- =============================================================================
 
 CREATE TABLE follow_up (
@@ -488,7 +715,6 @@ CREATE TABLE follow_up (
     admission_id INT NOT NULL,
     timepoint VARCHAR(20) NOT NULL COMMENT '6h / 12h / 24h / day2 / day3...',
 
-    -- Reference to other data tables by timepoint
     notes TEXT,
     new_shock_event TINYINT DEFAULT 0 COMMENT 'New shock = new event / point 0',
 
@@ -500,7 +726,7 @@ CREATE TABLE follow_up (
 );
 
 -- =============================================================================
--- OUTCOME
+-- 15. OUTCOME
 -- =============================================================================
 
 CREATE TABLE outcome (
@@ -528,7 +754,7 @@ CREATE TABLE outcome (
 );
 
 -- =============================================================================
--- AUDIT LOG
+-- 16. AUDIT LOG
 -- =============================================================================
 
 CREATE TABLE audit_log (
@@ -542,6 +768,8 @@ CREATE TABLE audit_log (
     performed_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     ip_address VARCHAR(45)
 );
+
+SET FOREIGN_KEY_CHECKS = 1;
 
 -- =============================================================================
 -- VIEWS FOR REPORTING
@@ -586,3 +814,53 @@ FROM admission a
 JOIN shock_classification sc ON a.admission_id = sc.admission_id
 JOIN outcome o ON a.admission_id = o.admission_id
 GROUP BY sc.shock_cardiogenic, sc.scai_classification, sc.shock_distributive, sc.shock_hypovolemic;
+
+CREATE VIEW v_latest_blood_gas AS
+SELECT
+    a.case_number,
+    p.patient_code,
+    bg.timepoint,
+    bg.ph,
+    bg.pco2,
+    bg.po2,
+    bg.lactate,
+    bg.hco3_actual,
+    bg.be_ecf,
+    bg.thb,
+    bg.so2_measured,
+    bg.collected_at
+FROM blood_gas bg
+JOIN admission a ON bg.admission_id = a.admission_id
+JOIN patient p ON a.patient_id = p.patient_id
+WHERE bg.collected_at = (
+    SELECT MAX(bg2.collected_at)
+    FROM blood_gas bg2
+    WHERE bg2.admission_id = bg.admission_id
+);
+
+CREATE VIEW v_latest_ventilator AS
+SELECT
+    a.case_number,
+    p.patient_code,
+    v.timepoint,
+    v.vent_mode,
+    v.fio2,
+    v.peep,
+    v.ppeak,
+    v.vt_measured,
+    v.rr_total,
+    v.mv_total,
+    v.compliance_static,
+    v.recorded_at
+FROM ventilator_settings v
+JOIN admission a ON v.admission_id = a.admission_id
+JOIN patient p ON a.patient_id = p.patient_id
+WHERE v.recorded_at = (
+    SELECT MAX(v2.recorded_at)
+    FROM ventilator_settings v2
+    WHERE v2.admission_id = v.admission_id
+);
+
+-- =============================================================================
+-- END OF SCHEMA
+-- =============================================================================
