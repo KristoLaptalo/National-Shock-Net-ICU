@@ -21,11 +21,12 @@ schemas/
 │   ├── shock-net-overview.mmd            # Simplified overview
 │   └── shock-net-daily-checklist.mmd     # ICU daily tasks
 ├── er-diagrams/          # Database schemas
-│   └── patient-database.mmd              # Full ER with 16 entities
+│   └── patient-database.mmd              # Full ER with 17 entities
 ├── sequence-diagrams/    # API interactions
 ├── architecture/         # System architecture
 ├── sql/                  # Database scripts
-│   └── patient-database-schema.sql       # MySQL schema with procedures
+│   ├── schema.sql                        # Complete MySQL schema (deployment-ready)
+│   └── sample-data.sql                   # Test data (10 patients)
 └── output/               # Compiled PNG images
 ```
 
@@ -59,13 +60,27 @@ mmdc -i er-diagrams/patient-database.mmd -o output/patient-database-er.png -b wh
 
 ## Database Schema (MySQL)
 
-Key tables: `patient` (anonymized), `admission`, `icu_subscription`, `admission_criteria`, `criteria_checklist`, `shock_assessment`, `vital_signs`, `lab_result`, `medication`, `intervention`, `daily_checklist`, `discharge`
+### Tables (17 total)
 
-Patient anonymization fields:
-- `pseudonym` - Generated identifier (e.g., ALPHA-142K7X)
+**Infrastructure:** `hospital`, `icu_subscription`, `icu_unit`, `physician`, `admin_user`
+
+**Patient Data:** `patient`, `admission`, `medical_history`, `working_diagnosis`, `shock_classification`
+
+**Monitoring:** `hemodynamic_data`, `echocardiography`, `swan_ganz`, `blood_gas`, `ventilator_settings`, `laboratory_results`
+
+**Other:** `pre_admission_medications`, `follow_up`, `outcome`, `audit_log`
+
+### Patient Anonymization Fields
+- `patient_code` - Generated identifier (e.g., ALPHA-142K7X)
 - `qr_code` - Unique QR identifier (e.g., NSN-202601-8734521)
 - `encrypted_identity` - AES-256 encrypted real name
 - `national_id_hash` - SHA-256 hash for duplicate detection
+
+### Deployment
+```bash
+mysql -u user -p database_name < sql/schema.sql
+mysql -u user -p database_name < sql/sample-data.sql  # optional test data
+```
 
 ## Working with Diagrams
 
