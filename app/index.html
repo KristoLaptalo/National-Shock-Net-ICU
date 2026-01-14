@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>National Shock Net ICU - Hospital Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'shock-purple': '#7B1FA2',
+                        'shock-purple-light': '#E1BEE7',
+                        'shock-green': '#2E7D32',
+                        'shock-green-light': '#C8E6C9',
+                        'shock-orange': '#E65100',
+                        'shock-orange-light': '#FFF3E0',
+                        'shock-blue': '#1565C0',
+                        'shock-blue-light': '#E3F2FD',
+                        'shock-red': '#C62828',
+                        'shock-red-light': '#FFCDD2',
+                        'shock-teal': '#00695C',
+                        'shock-teal-light': '#B2DFDB',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .screen { display: none; }
+        .screen.active { display: block; }
+        .nav-item.active { background-color: #1565C0; color: white; }
+        .status-pending { background-color: #E3F2FD; color: #1565C0; }
+        .status-approved { background-color: #C8E6C9; color: #2E7D32; }
+        .status-rejected { background-color: #FFCDD2; color: #C62828; }
+        .status-admitted { background-color: #B2DFDB; color: #00695C; }
+        .status-discharged { background-color: #ECEFF1; color: #546E7A; }
+        .anonymization-badge { background-color: #E1BEE7; color: #7B1FA2; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+
+    <!-- ========================================== -->
+    <!-- SCREEN 0: LOGIN -->
+    <!-- ========================================== -->
+    <div id="login-screen" class="screen active">
+        <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-shock-blue to-shock-teal">
+            <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
+                <div class="text-center mb-8">
+                    <div class="w-20 h-20 bg-shock-blue-light rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-10 h-10 text-shock-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                        </svg>
+                    </div>
+                    <h1 class="text-2xl font-bold text-gray-800">National Shock Net ICU</h1>
+                    <p class="text-gray-500 mt-2">Hospital Portal</p>
+                </div>
+
+                <form onsubmit="showScreen('app-container'); return false;">
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-semibold mb-2">Hospital ID</label>
+                        <input type="text" value="HOSP-001" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-shock-blue focus:border-transparent" placeholder="Enter Hospital ID">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-semibold mb-2">Username</label>
+                        <input type="text" value="dr.smith" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-shock-blue focus:border-transparent" placeholder="Enter username">
+                    </div>
+                    <div class="mb-6">
+                        <label class="block text-gray-700 text-sm font-semibold mb-2">Password</label>
+                        <input type="password" value="password" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-shock-blue focus:border-transparent" placeholder="Enter password">
+                    </div>
+                    <button type="submit" class="w-full bg-shock-blue text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition">
+                        Login to Portal
+                    </button>
+                </form>
+
+                <p class="text-center text-gray-400 text-sm mt-6">
+                    Secure access for registered ICU facilities only
+                </p>
+
+                <div class="mt-4 pt-4 border-t border-gray-200 text-center">
+                    <a href="admin.html" class="text-sm text-gray-500 hover:text-admin-blue">
+                        Admin Portal →
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MAIN APP CONTAINER (after login) -->
+    <!-- ========================================== -->
+    <div id="app-container" class="screen">
+        <!-- Top Navigation Bar -->
+        <nav class="bg-white shadow-md">
+            <div class="max-w-7xl mx-auto px-4">
+                <div class="flex justify-between items-center h-16">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-10 h-10 bg-shock-blue rounded-lg flex items-center justify-center">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h1 class="font-bold text-gray-800">Shock Net ICU</h1>
+                            <p class="text-xs text-gray-500">City General Hospital</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <span class="px-3 py-1 bg-shock-green-light text-shock-green rounded-full text-sm font-medium">Premium Tier</span>
+                        <div class="flex items-center space-x-2">
+                            <div class="w-8 h-8 bg-gray-300 rounded-full"></div>
+                            <span class="text-gray-700">Dr. Smith</span>
+                        </div>
+                        <button onclick="showScreen('login-screen')" class="text-gray-500 hover:text-gray-700">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Secondary Navigation -->
+        <div class="bg-gray-50 border-b">
+            <div class="max-w-7xl mx-auto px-4">
+                <div class="flex space-x-1 py-2 overflow-x-auto">
+                    <button onclick="showTab('dashboard')" class="nav-item active px-4 py-2 rounded-lg text-sm font-medium transition" data-tab="dashboard">Dashboard</button>
+                    <button onclick="showTab('patients')" class="nav-item px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-200 transition" data-tab="patients">My Patients</button>
+                    <button onclick="showTab('new-patient')" class="nav-item px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-200 transition" data-tab="new-patient">New Patient</button>
+                    <button onclick="showTab('admission')" class="nav-item px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-200 transition" data-tab="admission">ICU Admission</button>
+                    <button onclick="showTab('daily-entry')" class="nav-item px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-200 transition" data-tab="daily-entry">Daily Entry</button>
+                    <button onclick="showTab('discharge')" class="nav-item px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-200 transition" data-tab="discharge">Discharge</button>
+                    <button onclick="showTab('subscription')" class="nav-item px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-200 transition" data-tab="subscription">Subscription</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Area -->
+        <div class="max-w-7xl mx-auto px-4 py-6">
+
+            <!-- ========================================== -->
+            <!-- TAB: DASHBOARD -->
+            <!-- ========================================== -->
+            <div id="tab-dashboard" class="tab-content">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">Hospital Dashboard</h2>
+
+                <!-- Stats Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-white rounded-xl shadow p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500 text-sm">Active Patients</p>
+                                <p class="text-3xl font-bold text-shock-teal">12</p>
+                            </div>
+                            <div class="w-12 h-12 bg-shock-teal-light rounded-full flex items-center justify-center">
+                                <svg class="w-6 h-6 text-shock-teal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500 text-sm">Pending Approval</p>
+                                <p class="text-3xl font-bold text-shock-blue">3</p>
+                            </div>
+                            <div class="w-12 h-12 bg-shock-blue-light rounded-full flex items-center justify-center">
+                                <svg class="w-6 h-6 text-shock-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500 text-sm">Monthly Usage</p>
+                                <p class="text-3xl font-bold text-shock-orange">18<span class="text-lg text-gray-400">/50</span></p>
+                            </div>
+                            <div class="w-12 h-12 bg-shock-orange-light rounded-full flex items-center justify-center">
+                                <svg class="w-6 h-6 text-shock-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500 text-sm">Discharged (Month)</p>
+                                <p class="text-3xl font-bold text-gray-600">8</p>
+                            </div>
+                            <div class="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
+                                <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity & Quick Actions -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-white rounded-xl shadow p-6">
+                        <h3 class="font-semibold text-gray-800 mb-4">Recent Submissions</h3>
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                <div class="flex items-center space-x-3">
+                                    <span class="anonymization-badge px-2 py-1 rounded text-xs font-mono">ALPHA-7K2M9X</span>
+                                    <span class="text-gray-600">Cardiogenic Shock</span>
+                                </div>
+                                <span class="status-pending px-2 py-1 rounded text-xs">Pending</span>
+                            </div>
+                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                <div class="flex items-center space-x-3">
+                                    <span class="anonymization-badge px-2 py-1 rounded text-xs font-mono">BETA-3N8P2Q</span>
+                                    <span class="text-gray-600">Septic Shock</span>
+                                </div>
+                                <span class="status-approved px-2 py-1 rounded text-xs">Approved</span>
+                            </div>
+                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                <div class="flex items-center space-x-3">
+                                    <span class="anonymization-badge px-2 py-1 rounded text-xs font-mono">GAMMA-5R1T4W</span>
+                                    <span class="text-gray-600">Mixed Shock</span>
+                                </div>
+                                <span class="status-admitted px-2 py-1 rounded text-xs">In ICU</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow p-6">
+                        <h3 class="font-semibold text-gray-800 mb-4">Quick Actions</h3>
+                        <div class="grid grid-cols-2 gap-3">
+                            <button onclick="showTab('new-patient')" class="p-4 bg-shock-green-light text-shock-green rounded-lg hover:bg-green-200 transition text-left">
+                                <svg class="w-6 h-6 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                </svg>
+                                <span class="font-medium">New Patient</span>
+                            </button>
+                            <button onclick="showTab('daily-entry')" class="p-4 bg-shock-blue-light text-shock-blue rounded-lg hover:bg-blue-200 transition text-left">
+                                <svg class="w-6 h-6 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                                </svg>
+                                <span class="font-medium">Daily Entry</span>
+                            </button>
+                            <button onclick="showTab('patients')" class="p-4 bg-shock-purple-light text-shock-purple rounded-lg hover:bg-purple-200 transition text-left">
+                                <svg class="w-6 h-6 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                </svg>
+                                <span class="font-medium">Find Patient</span>
+                            </button>
+                            <button onclick="showTab('discharge')" class="p-4 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition text-left">
+                                <svg class="w-6 h-6 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                                </svg>
+                                <span class="font-medium">Discharge</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========================================== -->
+            <!-- TAB: MY PATIENTS -->
+            <!-- ========================================== -->
+            <div id="tab-patients" class="tab-content hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">My Patients</h2>
+                    <div class="flex space-x-2">
+                        <select class="px-4 py-2 border rounded-lg text-gray-600">
+                            <option>All Status</option>
+                            <option>Pending</option>
+                            <option>Approved</option>
+                            <option>Admitted</option>
+                            <option>Discharged</option>
+                        </select>
+                        <input type="text" placeholder="Search by code..." class="px-4 py-2 border rounded-lg">
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow overflow-hidden">
+                    <table class="w-full">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Patient Code</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">QR Code</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Age/Gender</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Shock Type</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">SCAI</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200">
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4"><span class="anonymization-badge px-2 py-1 rounded text-sm font-mono">ALPHA-7K2M9X</span></td>
+                                <td class="px-6 py-4 text-gray-500 text-sm font-mono">NSN-202601-0001234</td>
+                                <td class="px-6 py-4 text-gray-600">67 / M</td>
+                                <td class="px-6 py-4 text-gray-600">Cardiogenic</td>
+                                <td class="px-6 py-4"><span class="px-2 py-1 bg-red-100 text-red-700 rounded font-bold">D</span></td>
+                                <td class="px-6 py-4"><span class="status-pending px-3 py-1 rounded-full text-sm">Pending</span></td>
+                                <td class="px-6 py-4"><button class="text-shock-blue hover:underline text-sm">View</button></td>
+                            </tr>
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4"><span class="anonymization-badge px-2 py-1 rounded text-sm font-mono">BETA-3N8P2Q</span></td>
+                                <td class="px-6 py-4 text-gray-500 text-sm font-mono">NSN-202601-0001235</td>
+                                <td class="px-6 py-4 text-gray-600">54 / F</td>
+                                <td class="px-6 py-4 text-gray-600">Septic</td>
+                                <td class="px-6 py-4"><span class="px-2 py-1 bg-orange-100 text-orange-700 rounded font-bold">C</span></td>
+                                <td class="px-6 py-4"><span class="status-approved px-3 py-1 rounded-full text-sm">Approved</span></td>
+                                <td class="px-6 py-4"><button onclick="showTab('admission')" class="text-shock-green hover:underline text-sm">Admit</button></td>
+                            </tr>
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4"><span class="anonymization-badge px-2 py-1 rounded text-sm font-mono">GAMMA-5R1T4W</span></td>
+                                <td class="px-6 py-4 text-gray-500 text-sm font-mono">NSN-202601-0001230</td>
+                                <td class="px-6 py-4 text-gray-600">72 / M</td>
+                                <td class="px-6 py-4 text-gray-600">Mixed</td>
+                                <td class="px-6 py-4"><span class="px-2 py-1 bg-red-100 text-red-700 rounded font-bold">E</span></td>
+                                <td class="px-6 py-4"><span class="status-admitted px-3 py-1 rounded-full text-sm">In ICU - Day 3</span></td>
+                                <td class="px-6 py-4"><button onclick="showTab('daily-entry')" class="text-shock-blue hover:underline text-sm">Enter Data</button></td>
+                            </tr>
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4"><span class="anonymization-badge px-2 py-1 rounded text-sm font-mono">DELTA-9M4K7L</span></td>
+                                <td class="px-6 py-4 text-gray-500 text-sm font-mono">NSN-202601-0001220</td>
+                                <td class="px-6 py-4 text-gray-600">45 / F</td>
+                                <td class="px-6 py-4 text-gray-600">Hypovolemic</td>
+                                <td class="px-6 py-4"><span class="px-2 py-1 bg-yellow-100 text-yellow-700 rounded font-bold">B</span></td>
+                                <td class="px-6 py-4"><span class="status-discharged px-3 py-1 rounded-full text-sm">Discharged</span></td>
+                                <td class="px-6 py-4"><button class="text-gray-500 hover:underline text-sm">Archive</button></td>
+                            </tr>
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4"><span class="anonymization-badge px-2 py-1 rounded text-sm font-mono">EPSILON-2J6H8N</span></td>
+                                <td class="px-6 py-4 text-gray-500 text-sm font-mono">NSN-202601-0001236</td>
+                                <td class="px-6 py-4 text-gray-600">61 / M</td>
+                                <td class="px-6 py-4 text-gray-600">Obstructive</td>
+                                <td class="px-6 py-4"><span class="px-2 py-1 bg-orange-100 text-orange-700 rounded font-bold">C</span></td>
+                                <td class="px-6 py-4"><span class="status-rejected px-3 py-1 rounded-full text-sm">Rejected</span></td>
+                                <td class="px-6 py-4"><button class="text-shock-red hover:underline text-sm">View Reason</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ========================================== -->
+            <!-- TAB: NEW PATIENT -->
+            <!-- ========================================== -->
+            <div id="tab-new-patient" class="tab-content hidden">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">Submit New Patient</h2>
+
+                <!-- Subscription Check Banner -->
+                <div class="bg-shock-green-light border border-shock-green rounded-lg p-4 mb-6 flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <svg class="w-6 h-6 text-shock-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <span class="text-shock-green font-medium">Subscription Active - Premium Tier</span>
+                    </div>
+                    <span class="text-shock-green">18/50 submissions this month</span>
+                </div>
+
+                <form class="space-y-6">
+                    <!-- Step 1: Patient Identity -->
+                    <div class="bg-white rounded-xl shadow p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                            <span class="w-8 h-8 bg-shock-blue text-white rounded-full flex items-center justify-center mr-3 text-sm">1</span>
+                            Patient Identity (Confidential)
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
+                                <input type="text" class="w-full px-4 py-2 border rounded-lg" placeholder="Enter full name">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Date of Birth *</label>
+                                <input type="date" class="w-full px-4 py-2 border rounded-lg">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">National ID *</label>
+                                <input type="text" class="w-full px-4 py-2 border rounded-lg" placeholder="Enter national ID">
+                            </div>
+                        </div>
+
+                        <!-- Anonymization Preview -->
+                        <div class="mt-4 p-4 bg-shock-purple-light rounded-lg border-2 border-dashed border-shock-purple">
+                            <div class="flex items-center space-x-2 mb-2">
+                                <svg class="w-5 h-5 text-shock-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                                </svg>
+                                <span class="font-semibold text-shock-purple">Automatic Anonymization</span>
+                            </div>
+                            <p class="text-sm text-gray-600 mb-3">Upon submission, the system will automatically generate:</p>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                <div class="bg-white rounded p-2">
+                                    <p class="text-xs text-gray-500">Pseudonym</p>
+                                    <p class="font-mono text-shock-purple">ALPHA-XXXXXX</p>
+                                </div>
+                                <div class="bg-white rounded p-2">
+                                    <p class="text-xs text-gray-500">QR Code</p>
+                                    <p class="font-mono text-shock-purple">NSN-YYYYMM-######</p>
+                                </div>
+                                <div class="bg-white rounded p-2">
+                                    <p class="text-xs text-gray-500">Encrypted Identity</p>
+                                    <p class="font-mono text-shock-purple">AES-256</p>
+                                </div>
+                                <div class="bg-white rounded p-2">
+                                    <p class="text-xs text-gray-500">ID Hash</p>
+                                    <p class="font-mono text-shock-purple">SHA-256</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Demographics -->
+                    <div class="bg-white rounded-xl shadow p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                            <span class="w-8 h-8 bg-shock-blue text-white rounded-full flex items-center justify-center mr-3 text-sm">2</span>
+                            Demographics
+                        </h3>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Gender *</label>
+                                <select class="w-full px-4 py-2 border rounded-lg">
+                                    <option>Select...</option>
+                                    <option>Male</option>
+                                    <option>Female</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Weight (kg)</label>
+                                <input type="number" class="w-full px-4 py-2 border rounded-lg" placeholder="kg">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Height (cm)</label>
+                                <input type="number" class="w-full px-4 py-2 border rounded-lg" placeholder="cm">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">BMI (calculated)</label>
+                                <input type="text" class="w-full px-4 py-2 border rounded-lg bg-gray-100" value="--" readonly>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Hemodynamic Data -->
+                    <div class="bg-white rounded-xl shadow p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                            <span class="w-8 h-8 bg-shock-blue text-white rounded-full flex items-center justify-center mr-3 text-sm">3</span>
+                            Initial Hemodynamics
+                        </h3>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">MAP (mmHg) *</label>
+                                <input type="number" class="w-full px-4 py-2 border rounded-lg border-red-300" placeholder="< 65 = criteria">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">SBP (mmHg) *</label>
+                                <input type="number" class="w-full px-4 py-2 border rounded-lg border-red-300" placeholder="< 90 = criteria">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">DBP (mmHg)</label>
+                                <input type="number" class="w-full px-4 py-2 border rounded-lg" placeholder="mmHg">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Heart Rate (bpm)</label>
+                                <input type="number" class="w-full px-4 py-2 border rounded-lg" placeholder="bpm">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">CVP (mmHg)</label>
+                                <input type="number" class="w-full px-4 py-2 border rounded-lg" placeholder="mmHg">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Lactate (mmol/L) *</label>
+                                <input type="number" step="0.1" class="w-full px-4 py-2 border rounded-lg border-red-300" placeholder="> 2.0 = criteria">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">CO (L/min)</label>
+                                <input type="number" step="0.1" class="w-full px-4 py-2 border rounded-lg" placeholder="L/min">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">CI (L/min/m2)</label>
+                                <input type="number" step="0.1" class="w-full px-4 py-2 border rounded-lg" placeholder="L/min/m2">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 4: Shock Classification -->
+                    <div class="bg-white rounded-xl shadow p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                            <span class="w-8 h-8 bg-shock-blue text-white rounded-full flex items-center justify-center mr-3 text-sm">4</span>
+                            Shock Classification
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Shock Type *</label>
+                                <div class="space-y-2">
+                                    <label class="flex items-center p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                                        <input type="checkbox" class="mr-3"> Cardiogenic
+                                    </label>
+                                    <label class="flex items-center p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                                        <input type="checkbox" class="mr-3"> Septic / Distributive
+                                    </label>
+                                    <label class="flex items-center p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                                        <input type="checkbox" class="mr-3"> Hypovolemic
+                                    </label>
+                                    <label class="flex items-center p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                                        <input type="checkbox" class="mr-3"> Obstructive
+                                    </label>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">SCAI Stage *</label>
+                                <div class="grid grid-cols-5 gap-2">
+                                    <button type="button" class="scai-btn p-3 border rounded-lg hover:bg-green-100 text-center" data-stage="A">
+                                        <span class="block font-bold text-lg">A</span>
+                                        <span class="text-xs text-gray-500">At Risk</span>
+                                    </button>
+                                    <button type="button" class="scai-btn p-3 border rounded-lg hover:bg-yellow-100 text-center" data-stage="B">
+                                        <span class="block font-bold text-lg">B</span>
+                                        <span class="text-xs text-gray-500">Beginning</span>
+                                    </button>
+                                    <button type="button" class="scai-btn p-3 border-2 border-shock-orange rounded-lg bg-shock-orange-light text-center" data-stage="C">
+                                        <span class="block font-bold text-lg">C</span>
+                                        <span class="text-xs text-gray-500">Classic</span>
+                                    </button>
+                                    <button type="button" class="scai-btn p-3 border rounded-lg hover:bg-orange-100 text-center" data-stage="D">
+                                        <span class="block font-bold text-lg">D</span>
+                                        <span class="text-xs text-gray-500">Deteriorating</span>
+                                    </button>
+                                    <button type="button" class="scai-btn p-3 border rounded-lg hover:bg-red-100 text-center" data-stage="E">
+                                        <span class="block font-bold text-lg">E</span>
+                                        <span class="text-xs text-gray-500">Extremis</span>
+                                    </button>
+                                </div>
+                                <div class="mt-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Shock Onset Date</label>
+                                    <input type="date" class="w-full px-4 py-2 border rounded-lg">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 5: Supporting Documents -->
+                    <div class="bg-white rounded-xl shadow p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                            <span class="w-8 h-8 bg-shock-blue text-white rounded-full flex items-center justify-center mr-3 text-sm">5</span>
+                            Supporting Documents
+                        </h3>
+                        <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+                            <svg class="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                            </svg>
+                            <p class="text-gray-600 mb-2">Drag and drop files here, or click to browse</p>
+                            <p class="text-sm text-gray-400">ECG, Lab Results, Echo Images (PDF, JPG, PNG)</p>
+                            <button type="button" class="mt-4 px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Browse Files</button>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="flex justify-end space-x-4">
+                        <button type="button" class="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">Save Draft</button>
+                        <button type="submit" onclick="alert('Patient submitted! Status: PENDING\nPatient Code: ZETA-8P3Q7R'); showTab('patients'); return false;" class="px-6 py-3 bg-shock-green text-white rounded-lg hover:bg-green-700 font-semibold">
+                            Submit for Approval
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- ========================================== -->
+            <!-- TAB: ICU ADMISSION -->
+            <!-- ========================================== -->
+            <div id="tab-admission" class="tab-content hidden">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">ICU Admission</h2>
+
+                <!-- Patient Selection -->
+                <div class="bg-white rounded-xl shadow p-6 mb-6">
+                    <h3 class="font-semibold text-gray-800 mb-4">Select Approved Patient</h3>
+                    <select class="w-full md:w-1/2 px-4 py-3 border rounded-lg text-lg">
+                        <option>Select patient to admit...</option>
+                        <option>BETA-3N8P2Q - Septic Shock - SCAI C (Approved)</option>
+                        <option>ETA-1K5M9N - Cardiogenic - SCAI D (Approved)</option>
+                    </select>
+                </div>
+
+                <!-- Patient Info Card -->
+                <div class="bg-shock-purple-light rounded-xl p-6 mb-6">
+                    <div class="flex items-center justify-between flex-wrap gap-4">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-16 h-16 bg-white rounded-lg flex items-center justify-center">
+                                <svg class="w-8 h-8 text-shock-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-sm text-shock-purple">Patient Code</p>
+                                <p class="text-2xl font-bold font-mono text-shock-purple">BETA-3N8P2Q</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-sm text-shock-purple">QR Code</p>
+                            <p class="font-mono text-shock-purple">NSN-202601-0001235</p>
+                        </div>
+                    </div>
+                </div>
+
+                <form class="space-y-6">
+                    <!-- ICU Unit Selection -->
+                    <div class="bg-white rounded-xl shadow p-6">
+                        <h3 class="font-semibold text-gray-800 mb-4">ICU Unit & Bed Assignment</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">ICU Unit *</label>
+                                <select class="w-full px-4 py-2 border rounded-lg">
+                                    <option>Select ICU...</option>
+                                    <option>Cardiac ICU (CICU)</option>
+                                    <option>Medical ICU (MICU)</option>
+                                    <option>Surgical ICU (SICU)</option>
+                                    <option>Coronary Care Unit (CCU)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Bed Number *</label>
+                                <select class="w-full px-4 py-2 border rounded-lg">
+                                    <option>Select bed...</option>
+                                    <option>Bed 1 (Available)</option>
+                                    <option>Bed 2 (Available)</option>
+                                    <option>Bed 5 (Available)</option>
+                                    <option>Bed 8 (Available)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Admission Date/Time *</label>
+                                <input type="datetime-local" class="w-full px-4 py-2 border rounded-lg">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Wristband Generation -->
+                    <div class="bg-shock-purple-light border-2 border-shock-purple rounded-xl p-6">
+                        <div class="flex items-center space-x-3 mb-4">
+                            <svg class="w-6 h-6 text-shock-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+                            </svg>
+                            <span class="font-semibold text-shock-purple">Patient Wristband (Privacy-First)</span>
+                        </div>
+                        <div class="bg-white rounded-lg p-4 flex items-center justify-between flex-wrap gap-4">
+                            <div>
+                                <p class="text-sm text-gray-500 mb-1">Wristband will display:</p>
+                                <p class="font-mono text-lg"><span class="text-shock-purple font-bold">BETA-3N8P2Q</span> | QR: NSN-202601-0001235</p>
+                                <p class="text-sm text-gray-400 mt-1">No real name on wristband</p>
+                            </div>
+                            <button type="button" class="px-4 py-2 bg-shock-purple text-white rounded-lg hover:bg-purple-700">Print Wristband</button>
+                        </div>
+                    </div>
+
+                    <!-- Initial Vitals -->
+                    <div class="bg-white rounded-xl shadow p-6">
+                        <h3 class="font-semibold text-gray-800 mb-4">Initial Admission Vitals</h3>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">MAP (mmHg)</label>
+                                <input type="number" class="w-full px-4 py-2 border rounded-lg" placeholder="mmHg">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Heart Rate (bpm)</label>
+                                <input type="number" class="w-full px-4 py-2 border rounded-lg" placeholder="bpm">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">SpO2 (%)</label>
+                                <input type="number" class="w-full px-4 py-2 border rounded-lg" placeholder="%">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Temperature (C)</label>
+                                <input type="number" step="0.1" class="w-full px-4 py-2 border rounded-lg" placeholder="C">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Care Team -->
+                    <div class="bg-white rounded-xl shadow p-6">
+                        <h3 class="font-semibold text-gray-800 mb-4">Assign Care Team</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Attending Physician</label>
+                                <select class="w-full px-4 py-2 border rounded-lg">
+                                    <option>Dr. Smith (Cardiology)</option>
+                                    <option>Dr. Johnson (Critical Care)</option>
+                                    <option>Dr. Williams (Pulmonology)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Primary Nurse</label>
+                                <select class="w-full px-4 py-2 border rounded-lg">
+                                    <option>Select nurse...</option>
+                                    <option>Nurse Anderson</option>
+                                    <option>Nurse Brown</option>
+                                    <option>Nurse Davis</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Submit -->
+                    <div class="flex justify-end">
+                        <button type="submit" onclick="alert('Patient BETA-3N8P2Q admitted to CICU Bed 5!\nStatus: IN ICU CARE'); showTab('patients'); return false;" class="px-6 py-3 bg-shock-teal text-white rounded-lg hover:bg-teal-700 font-semibold">
+                            Complete Admission
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- ========================================== -->
+            <!-- TAB: DAILY DATA ENTRY -->
+            <!-- ========================================== -->
+            <div id="tab-daily-entry" class="tab-content hidden">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">Daily Data Entry</h2>
+
+                <!-- QR Scanner Simulation -->
+                <div class="bg-shock-purple-light rounded-xl p-6 mb-6">
+                    <div class="flex items-center justify-between flex-wrap gap-4">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-16 h-16 bg-white rounded-lg flex items-center justify-center">
+                                <svg class="w-8 h-8 text-shock-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-sm text-shock-purple">Scan Patient QR or Select</p>
+                                <select class="mt-1 px-4 py-2 border-2 border-shock-purple rounded-lg bg-white font-mono">
+                                    <option>GAMMA-5R1T4W (Day 3 in ICU)</option>
+                                    <option>THETA-2M7K4P (Day 1 in ICU)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-shock-purple font-bold text-2xl">Day 3</p>
+                            <p class="text-sm text-shock-purple">in ICU</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Data Entry Tabs -->
+                <div class="bg-white rounded-xl shadow">
+                    <div class="border-b px-6 py-4">
+                        <div class="flex space-x-2 overflow-x-auto">
+                            <button onclick="showDataTab('hemodynamics')" class="data-tab px-4 py-2 bg-yellow-100 text-yellow-800 rounded-lg font-medium" data-datatab="hemodynamics">Hemodynamics</button>
+                            <button onclick="showDataTab('bloodgas')" class="data-tab px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium" data-datatab="bloodgas">Blood Gas</button>
+                            <button onclick="showDataTab('ventilator')" class="data-tab px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium" data-datatab="ventilator">Ventilator</button>
+                            <button onclick="showDataTab('labs')" class="data-tab px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium" data-datatab="labs">Laboratory</button>
+                            <button onclick="showDataTab('echo')" class="data-tab px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium" data-datatab="echo">Echo</button>
+                            <button onclick="showDataTab('notes')" class="data-tab px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium" data-datatab="notes">Notes</button>
+                        </div>
+                    </div>
+
+                    <!-- Hemodynamics Form -->
+                    <div id="data-hemodynamics" class="data-content p-6">
+                        <h3 class="font-semibold text-gray-800 mb-4">Hemodynamic Monitoring</h3>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">MAP (mmHg)</label><input type="number" class="w-full px-4 py-2 border rounded-lg" placeholder="Target: 65-70"></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">SBP (mmHg)</label><input type="number" class="w-full px-4 py-2 border rounded-lg"></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">DBP (mmHg)</label><input type="number" class="w-full px-4 py-2 border rounded-lg"></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Heart Rate (bpm)</label><input type="number" class="w-full px-4 py-2 border rounded-lg"></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">CVP (mmHg)</label><input type="number" class="w-full px-4 py-2 border rounded-lg"></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">CO (L/min)</label><input type="number" step="0.1" class="w-full px-4 py-2 border rounded-lg"></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">CI (L/min/m2)</label><input type="number" step="0.1" class="w-full px-4 py-2 border rounded-lg"></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">SVR</label><input type="number" class="w-full px-4 py-2 border rounded-lg"></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Lactate (mmol/L)</label><input type="number" step="0.1" class="w-full px-4 py-2 border rounded-lg"></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">ScvO2 (%)</label><input type="number" class="w-full px-4 py-2 border rounded-lg"></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">SpO2 (%)</label><input type="number" class="w-full px-4 py-2 border rounded-lg"></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Temperature (C)</label><input type="number" step="0.1" class="w-full px-4 py-2 border rounded-lg"></div>
+                        </div>
+                        <div class="mt-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Timepoint</label>
+                            <select class="px-4 py-2 border rounded-lg">
+                                <option>Morning Rounds (08:00)</option>
+                                <option>6h Check</option>
+                                <option>12h Check</option>
+                                <option>Evening (18:00)</option>
+                                <option>Night (00:00)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Blood Gas Form -->
+                    <div id="data-bloodgas" class="data-content hidden p-6">
+                        <h3 class="font-semibold text-gray-800 mb-4">Arterial Blood Gas</h3>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">pH</label><input type="number" step="0.01" class="w-full px-4 py-2 border rounded-lg" placeholder="7.35-7.45"></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">PaCO2 (kPa)</label><input type="number" step="0.1" class="w-full px-4 py-2 border rounded-lg"></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">PaO2 (kPa)</label><input type="number" step="0.1" class="w-full px-4 py-2 border rounded-lg"></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">HCO3 (mmol/L)</label><input type="number" step="0.1" class="w-full px-4 py-2 border rounded-lg"></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">BE (mmol/L)</label><input type="number" step="0.1" class="w-full px-4 py-2 border rounded-lg"></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">SaO2 (%)</label><input type="number" class="w-full px-4 py-2 border rounded-lg"></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">FiO2 (%)</label><input type="number" class="w-full px-4 py-2 border rounded-lg"></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">P/F Ratio</label><input type="number" class="w-full px-4 py-2 border rounded-lg bg-gray-100" placeholder="Calculated" readonly></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Lactate (mmol/L)</label><input type="number" step="0.1" class="w-full px-4 py-2 border rounded-lg"></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Hemoglobin (g/L)</label><input type="number" class="w-full px-4 py-2 border rounded-lg"></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Na+ (mmol/L)</label><input type="number" step="0.1" class="w-full px-4 py-2 border rounded-lg"></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">K+ (mmol/L)</label><input type="number" step="0.1" class="w-full px-4 py-2 border rounded-lg"></div>
+                        </div>
+                    </div>
+
+                    <!-- Ventilator Form -->
+                    <div id="data-ventilator" class="data-content hidden p-6">
+                        <h3 class="font-semibold text-gray-800 mb-4">Ventilator Settings</h3>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Mode</label><select class="w-full px-4 py-2 border rounded-lg"><option>AC/VC</option><option>SIMV</option><option>PS/CPAP</option><option>PCV</option><option>BIPAP</option><option>APRV</option></select></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Vt (mL)</label><input type="number" class="w-full px-4 py-2 border rounded-lg"></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">RR (breaths/min)</label><input type="number" class="w-full px-4 py-2 border rounded-lg"></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">PEEP (cmH2O)</label><input type="number" class="w-full px-4 py-2 border rounded-lg"></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">FiO2 (%)</label><input type="number" class="w-full px-4 py-2 border rounded-lg"></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">I:E Ratio</label><input type="text" class="w-full px-4 py-2 border rounded-lg" placeholder="1:2"></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Peak Pressure</label><input type="number" class="w-full px-4 py-2 border rounded-lg"></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Plateau Pressure</label><input type="number" class="w-full px-4 py-2 border rounded-lg"></div>
+                        </div>
+                    </div>
+
+                    <!-- Labs Form -->
+                    <div id="data-labs" class="data-content hidden p-6">
+                        <h3 class="font-semibold text-gray-800 mb-4">Laboratory Results</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <h4 class="font-medium text-gray-700 mb-3">CBC Panel</h4>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div><label class="block text-sm text-gray-600 mb-1">WBC (x10^9/L)</label><input type="number" step="0.1" class="w-full px-3 py-2 border rounded"></div>
+                                    <div><label class="block text-sm text-gray-600 mb-1">Hemoglobin (g/L)</label><input type="number" class="w-full px-3 py-2 border rounded"></div>
+                                    <div><label class="block text-sm text-gray-600 mb-1">Platelets (x10^9/L)</label><input type="number" class="w-full px-3 py-2 border rounded"></div>
+                                    <div><label class="block text-sm text-gray-600 mb-1">Hematocrit (L/L)</label><input type="number" step="0.01" class="w-full px-3 py-2 border rounded"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="font-medium text-gray-700 mb-3">Renal/Liver</h4>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div><label class="block text-sm text-gray-600 mb-1">Creatinine (umol/L)</label><input type="number" class="w-full px-3 py-2 border rounded"></div>
+                                    <div><label class="block text-sm text-gray-600 mb-1">Urea (mmol/L)</label><input type="number" step="0.1" class="w-full px-3 py-2 border rounded"></div>
+                                    <div><label class="block text-sm text-gray-600 mb-1">AST (U/L)</label><input type="number" class="w-full px-3 py-2 border rounded"></div>
+                                    <div><label class="block text-sm text-gray-600 mb-1">ALT (U/L)</label><input type="number" class="w-full px-3 py-2 border rounded"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="font-medium text-gray-700 mb-3">Cardiac Markers</h4>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div><label class="block text-sm text-gray-600 mb-1">Troponin (ng/L)</label><input type="number" step="0.01" class="w-full px-3 py-2 border rounded"></div>
+                                    <div><label class="block text-sm text-gray-600 mb-1">NT-proBNP (pg/mL)</label><input type="number" class="w-full px-3 py-2 border rounded"></div>
+                                    <div><label class="block text-sm text-gray-600 mb-1">CK (U/L)</label><input type="number" class="w-full px-3 py-2 border rounded"></div>
+                                    <div><label class="block text-sm text-gray-600 mb-1">LDH (U/L)</label><input type="number" class="w-full px-3 py-2 border rounded"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="font-medium text-gray-700 mb-3">Inflammatory</h4>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div><label class="block text-sm text-gray-600 mb-1">CRP (mg/L)</label><input type="number" step="0.1" class="w-full px-3 py-2 border rounded"></div>
+                                    <div><label class="block text-sm text-gray-600 mb-1">Procalcitonin (ng/mL)</label><input type="number" step="0.01" class="w-full px-3 py-2 border rounded"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Echo Form -->
+                    <div id="data-echo" class="data-content hidden p-6">
+                        <h3 class="font-semibold text-gray-800 mb-4">Echocardiography</h3>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">LVEF (%)</label><input type="number" class="w-full px-4 py-2 border rounded-lg"></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">RVEF (%)</label><input type="number" class="w-full px-4 py-2 border rounded-lg"></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">LV Function</label><select class="w-full px-4 py-2 border rounded-lg"><option>Preserved</option><option>Reduced</option></select></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">RV Function</label><select class="w-full px-4 py-2 border rounded-lg"><option>Preserved</option><option>Reduced</option></select></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">LVOT VTI</label><input type="number" step="0.1" class="w-full px-4 py-2 border rounded-lg"></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">IVC Status</label><select class="w-full px-4 py-2 border rounded-lg"><option>Normal</option><option>Dilated - Preserved Collapse</option><option>Dilated - &lt; 50% Collapse</option><option>Dilated - Fixed</option></select></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Mitral Regurgitation</label><select class="w-full px-4 py-2 border rounded-lg"><option>None</option><option>Mild</option><option>Moderate</option><option>Severe</option></select></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">TR Vmax (m/s)</label><input type="number" step="0.1" class="w-full px-4 py-2 border rounded-lg"></div>
+                        </div>
+                    </div>
+
+                    <!-- Notes Form -->
+                    <div id="data-notes" class="data-content hidden p-6">
+                        <h3 class="font-semibold text-gray-800 mb-4">Daily Progress Notes</h3>
+                        <div class="space-y-4">
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Clinical Summary</label><textarea class="w-full px-4 py-2 border rounded-lg h-32" placeholder="Enter clinical summary for today..."></textarea></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Plan Updates</label><textarea class="w-full px-4 py-2 border rounded-lg h-24" placeholder="Treatment plan changes..."></textarea></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Family Communication</label><textarea class="w-full px-4 py-2 border rounded-lg h-24" placeholder="Notes from family discussions..."></textarea></div>
+                        </div>
+                    </div>
+
+                    <!-- Save Button -->
+                    <div class="border-t px-6 py-4 flex justify-end space-x-4">
+                        <button type="button" class="px-4 py-2 border rounded-lg text-gray-600 hover:bg-gray-50">Add Another Entry</button>
+                        <button type="button" onclick="alert('Data saved for GAMMA-5R1T4W (Day 3)');" class="px-6 py-2 bg-shock-blue text-white rounded-lg hover:bg-blue-700">Save Entry</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========================================== -->
+            <!-- TAB: DISCHARGE -->
+            <!-- ========================================== -->
+            <div id="tab-discharge" class="tab-content hidden">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">Discharge & Outcomes</h2>
+
+                <!-- Patient Selection -->
+                <div class="bg-white rounded-xl shadow p-6 mb-6">
+                    <h3 class="font-semibold text-gray-800 mb-4">Select Patient for Discharge</h3>
+                    <select class="w-full md:w-1/2 px-4 py-3 border rounded-lg text-lg">
+                        <option>Select admitted patient...</option>
+                        <option>GAMMA-5R1T4W - Mixed Shock - Day 3 in ICU</option>
+                        <option>THETA-2M7K4P - Cardiogenic - Day 1 in ICU</option>
+                    </select>
+                </div>
+
+                <form class="space-y-6">
+                    <!-- Discharge Summary -->
+                    <div class="bg-white rounded-xl shadow p-6">
+                        <h3 class="font-semibold text-gray-800 mb-4">Discharge Summary</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Admission Date</label><input type="text" value="2026-01-11" class="w-full px-4 py-2 border rounded-lg bg-gray-100" readonly></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Discharge Date *</label><input type="date" class="w-full px-4 py-2 border rounded-lg"></div>
+                            <div><label class="block text-sm font-medium text-gray-700 mb-1">Length of Stay (days)</label><input type="text" value="3" class="w-full px-4 py-2 border rounded-lg bg-gray-100" readonly></div>
+                        </div>
+                        <div><label class="block text-sm font-medium text-gray-700 mb-1">Discharge Summary Notes</label><textarea class="w-full px-4 py-2 border rounded-lg h-32" placeholder="Enter discharge summary..."></textarea></div>
+                    </div>
+
+                    <!-- Outcome -->
+                    <div class="bg-white rounded-xl shadow p-6">
+                        <h3 class="font-semibold text-gray-800 mb-4">Patient Outcome</h3>
+                        <div class="grid grid-cols-2 gap-4 mb-6">
+                            <button type="button" onclick="showOutcome('survived')" class="outcome-btn p-6 border-2 border-shock-green bg-shock-green-light rounded-xl text-left">
+                                <svg class="w-8 h-8 text-shock-green mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                <span class="block font-semibold text-shock-green text-lg">Survived</span>
+                                <span class="text-sm text-gray-600">Patient discharged alive</span>
+                            </button>
+                            <button type="button" onclick="showOutcome('deceased')" class="outcome-btn p-6 border-2 border-gray-300 rounded-xl text-left hover:border-shock-red hover:bg-shock-red-light">
+                                <svg class="w-8 h-8 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                <span class="block font-semibold text-gray-600 text-lg">Deceased</span>
+                                <span class="text-sm text-gray-500">Document mortality</span>
+                            </button>
+                        </div>
+
+                        <!-- Survived Details -->
+                        <div id="outcome-survived" class="border-t pt-4">
+                            <h4 class="font-medium text-gray-700 mb-3">Discharge Destination</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                <label class="flex items-center p-3 border rounded-lg hover:bg-gray-50 cursor-pointer"><input type="radio" name="destination" class="mr-3" checked> Transfer to Ward</label>
+                                <label class="flex items-center p-3 border rounded-lg hover:bg-gray-50 cursor-pointer"><input type="radio" name="destination" class="mr-3"> Transfer to Other Facility</label>
+                                <label class="flex items-center p-3 border rounded-lg hover:bg-gray-50 cursor-pointer"><input type="radio" name="destination" class="mr-3"> Discharge Home</label>
+                            </div>
+                        </div>
+
+                        <!-- Deceased Details (hidden by default) -->
+                        <div id="outcome-deceased" class="border-t pt-4 hidden">
+                            <h4 class="font-medium text-gray-700 mb-3">Mortality Documentation</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div><label class="block text-sm font-medium text-gray-700 mb-1">Date/Time of Death</label><input type="datetime-local" class="w-full px-4 py-2 border rounded-lg"></div>
+                                <div><label class="block text-sm font-medium text-gray-700 mb-1">Autopsy Requested</label><select class="w-full px-4 py-2 border rounded-lg"><option>No</option><option>Yes</option></select></div>
+                                <div class="md:col-span-2"><label class="block text-sm font-medium text-gray-700 mb-1">Cause of Death</label><textarea class="w-full px-4 py-2 border rounded-lg h-24" placeholder="Document cause of death..."></textarea></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Archive Notice -->
+                    <div class="bg-shock-green-light border border-shock-green rounded-lg p-4 flex items-center space-x-4">
+                        <svg class="w-8 h-8 text-shock-green flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>
+                        <div>
+                            <p class="font-semibold text-shock-green">Case will be archived</p>
+                            <p class="text-sm text-gray-600">Anonymized data will be available for research and analytics</p>
+                        </div>
+                    </div>
+
+                    <!-- Submit -->
+                    <div class="flex justify-end space-x-4">
+                        <button type="button" class="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">Cancel</button>
+                        <button type="submit" onclick="alert('Patient GAMMA-5R1T4W discharged and archived!\nOutcome: Survived\nLOS: 3 days'); showTab('patients'); return false;" class="px-6 py-3 bg-shock-green text-white rounded-lg hover:bg-green-700 font-semibold">
+                            Complete Discharge
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- ========================================== -->
+            <!-- TAB: SUBSCRIPTION -->
+            <!-- ========================================== -->
+            <div id="tab-subscription" class="tab-content hidden">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">Subscription Details</h2>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Current Plan -->
+                    <div class="bg-white rounded-xl shadow p-6">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="font-semibold text-gray-800">Current Plan</h3>
+                            <span class="px-3 py-1 bg-shock-green-light text-shock-green rounded-full font-medium">Active</span>
+                        </div>
+                        <div class="text-center py-6 border-b">
+                            <p class="text-4xl font-bold text-shock-blue">Premium</p>
+                            <p class="text-gray-500 mt-2">50 patients/month</p>
+                        </div>
+                        <div class="space-y-4 mt-6">
+                            <div class="flex justify-between"><span class="text-gray-600">Contract Number</span><span class="font-mono">NSN-CONT-2026-0042</span></div>
+                            <div class="flex justify-between"><span class="text-gray-600">Start Date</span><span>January 1, 2026</span></div>
+                            <div class="flex justify-between"><span class="text-gray-600">Expiry Date</span><span>December 31, 2026</span></div>
+                            <div class="flex justify-between"><span class="text-gray-600">Max ICU Beds</span><span>25 beds</span></div>
+                        </div>
+                    </div>
+
+                    <!-- Usage -->
+                    <div class="bg-white rounded-xl shadow p-6">
+                        <h3 class="font-semibold text-gray-800 mb-6">Monthly Usage</h3>
+                        <div class="text-center py-6">
+                            <div class="relative w-40 h-40 mx-auto">
+                                <svg class="w-40 h-40 transform -rotate-90">
+                                    <circle cx="80" cy="80" r="70" stroke="#E5E7EB" stroke-width="12" fill="none"></circle>
+                                    <circle cx="80" cy="80" r="70" stroke="#1565C0" stroke-width="12" fill="none" stroke-dasharray="440" stroke-dashoffset="282"></circle>
+                                </svg>
+                                <div class="absolute inset-0 flex items-center justify-center">
+                                    <div>
+                                        <p class="text-3xl font-bold text-gray-800">18</p>
+                                        <p class="text-gray-500">of 50</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <p class="text-gray-600 mt-4">36% used this month</p>
+                        </div>
+                        <div class="space-y-3 mt-6">
+                            <div class="flex justify-between text-sm"><span class="text-gray-600">Active Patients</span><span class="font-semibold">12</span></div>
+                            <div class="flex justify-between text-sm"><span class="text-gray-600">Pending Approval</span><span class="font-semibold">3</span></div>
+                            <div class="flex justify-between text-sm"><span class="text-gray-600">Discharged (this month)</span><span class="font-semibold">8</span></div>
+                            <div class="flex justify-between text-sm"><span class="text-gray-600">Remaining Submissions</span><span class="font-semibold text-shock-green">32</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tier Comparison -->
+                <div class="bg-white rounded-xl shadow p-6 mt-6">
+                    <h3 class="font-semibold text-gray-800 mb-6">Available Tiers</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="border rounded-lg p-4 text-center">
+                            <p class="font-bold text-gray-800">Basic</p>
+                            <p class="text-2xl font-bold text-gray-600 my-2">10</p>
+                            <p class="text-sm text-gray-500">patients/month</p>
+                        </div>
+                        <div class="border rounded-lg p-4 text-center">
+                            <p class="font-bold text-gray-800">Standard</p>
+                            <p class="text-2xl font-bold text-gray-600 my-2">25</p>
+                            <p class="text-sm text-gray-500">patients/month</p>
+                        </div>
+                        <div class="border-2 border-shock-blue rounded-lg p-4 text-center bg-shock-blue-light">
+                            <p class="font-bold text-shock-blue">Premium</p>
+                            <p class="text-2xl font-bold text-shock-blue my-2">50</p>
+                            <p class="text-sm text-gray-600">patients/month</p>
+                            <span class="text-xs text-shock-blue">Current Plan</span>
+                        </div>
+                        <div class="border rounded-lg p-4 text-center">
+                            <p class="font-bold text-gray-800">Unlimited</p>
+                            <p class="text-2xl font-bold text-gray-600 my-2">&#8734;</p>
+                            <p class="text-sm text-gray-500">patients/month</p>
+                        </div>
+                    </div>
+                    <div class="mt-4 text-center">
+                        <button class="px-4 py-2 text-shock-blue hover:underline">Contact Admin to Upgrade</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Screen Management
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+            if (screenId === 'app-container') {
+                showTab('dashboard');
+            }
+        }
+
+        // Tab Management
+        function showTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
+            document.getElementById('tab-' + tabId).classList.remove('hidden');
+            document.querySelectorAll('.nav-item').forEach(n => {
+                n.classList.remove('active');
+                if (n.dataset.tab === tabId) {
+                    n.classList.add('active');
+                }
+            });
+        }
+
+        // Data Tab Management (for daily entry)
+        function showDataTab(tabId) {
+            document.querySelectorAll('.data-content').forEach(d => d.classList.add('hidden'));
+            document.getElementById('data-' + tabId).classList.remove('hidden');
+            document.querySelectorAll('.data-tab').forEach(t => {
+                t.classList.remove('bg-yellow-100', 'text-yellow-800');
+                t.classList.add('text-gray-600');
+            });
+            event.target.classList.remove('text-gray-600');
+            event.target.classList.add('bg-yellow-100', 'text-yellow-800');
+        }
+
+        // Outcome toggle
+        function showOutcome(type) {
+            document.getElementById('outcome-survived').classList.add('hidden');
+            document.getElementById('outcome-deceased').classList.add('hidden');
+            document.getElementById('outcome-' + type).classList.remove('hidden');
+            document.querySelectorAll('.outcome-btn').forEach(btn => {
+                btn.classList.remove('border-shock-green', 'bg-shock-green-light', 'border-shock-red', 'bg-shock-red-light');
+                btn.classList.add('border-gray-300');
+            });
+            if (type === 'survived') {
+                event.target.closest('.outcome-btn').classList.add('border-shock-green', 'bg-shock-green-light');
+            } else {
+                event.target.closest('.outcome-btn').classList.add('border-shock-red', 'bg-shock-red-light');
+            }
+        }
+    </script>
+
+</body>
+</html>

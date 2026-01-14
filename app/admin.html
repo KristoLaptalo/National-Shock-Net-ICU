@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>National Shock Net ICU - Admin Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'admin-blue': '#0D47A1',
+                        'admin-blue-light': '#BBDEFB',
+                        'shock-purple': '#7B1FA2',
+                        'shock-purple-light': '#E1BEE7',
+                        'shock-green': '#2E7D32',
+                        'shock-green-light': '#C8E6C9',
+                        'shock-orange': '#E65100',
+                        'shock-orange-light': '#FFF3E0',
+                        'shock-red': '#C62828',
+                        'shock-red-light': '#FFCDD2',
+                        'shock-teal': '#00695C',
+                        'shock-teal-light': '#B2DFDB',
+                        'shock-cyan': '#00838F',
+                        'shock-cyan-light': '#B2EBF2',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .screen { display: none; }
+        .screen.active { display: block; }
+        .sidebar-item.active { background-color: #1565C0; color: white; }
+        .status-pending { background-color: #FFF3E0; color: #E65100; }
+        .status-approved { background-color: #C8E6C9; color: #2E7D32; }
+        .status-rejected { background-color: #FFCDD2; color: #C62828; }
+        .status-review { background-color: #BBDEFB; color: #1565C0; }
+        .status-active { background-color: #B2DFDB; color: #00695C; }
+        .status-expiring { background-color: #FFE0B2; color: #E65100; }
+        .anonymization-badge { background-color: #E1BEE7; color: #7B1FA2; }
+        .tier-basic { background-color: #E0E0E0; color: #616161; }
+        .tier-standard { background-color: #BBDEFB; color: #1565C0; }
+        .tier-premium { background-color: #C8E6C9; color: #2E7D32; }
+        .tier-unlimited { background-color: #E1BEE7; color: #7B1FA2; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+
+    <!-- ========================================== -->
+    <!-- SCREEN: LOGIN -->
+    <!-- ========================================== -->
+    <div id="login-screen" class="screen active">
+        <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-admin-blue to-gray-900">
+            <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
+                <div class="text-center mb-8">
+                    <div class="w-20 h-20 bg-admin-blue rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                        </svg>
+                    </div>
+                    <h1 class="text-2xl font-bold text-gray-800">Shock Net Admin</h1>
+                    <p class="text-gray-500 mt-2">Network Administration Portal</p>
+                </div>
+
+                <form onsubmit="showScreen('app-container'); return false;">
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-semibold mb-2">Admin Username</label>
+                        <input type="text" value="admin" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-admin-blue focus:border-transparent" placeholder="Enter admin username">
+                    </div>
+                    <div class="mb-6">
+                        <label class="block text-gray-700 text-sm font-semibold mb-2">Password</label>
+                        <input type="password" value="admin123" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-admin-blue focus:border-transparent" placeholder="Enter password">
+                    </div>
+                    <button type="submit" class="w-full bg-admin-blue text-white py-3 rounded-lg font-semibold hover:bg-blue-900 transition">
+                        Access Admin Portal
+                    </button>
+                </form>
+
+                <p class="text-center text-gray-400 text-sm mt-6">
+                    Authorized administrators only
+                </p>
+
+                <div class="mt-4 pt-4 border-t border-gray-200 text-center">
+                    <a href="index.html" class="text-sm text-gray-500 hover:text-shock-blue">
+                        ← Hospital Portal
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MAIN APP CONTAINER -->
+    <!-- ========================================== -->
+    <div id="app-container" class="screen">
+        <div class="flex min-h-screen">
+            <!-- Sidebar -->
+            <aside class="w-64 bg-gray-900 text-white flex-shrink-0">
+                <div class="p-4 border-b border-gray-700">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-admin-blue rounded-lg flex items-center justify-center">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h1 class="font-bold">Shock Net</h1>
+                            <p class="text-xs text-gray-400">Admin Portal</p>
+                        </div>
+                    </div>
+                </div>
+
+                <nav class="p-4 space-y-2">
+                    <button onclick="showTab('dashboard')" class="sidebar-item active w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition" data-tab="dashboard">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                        <span>Dashboard</span>
+                    </button>
+                    <button onclick="showTab('subscriptions')" class="sidebar-item w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-800 transition" data-tab="subscriptions">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+                        <span>Subscriptions</span>
+                        <span class="ml-auto bg-shock-orange text-white text-xs px-2 py-1 rounded-full">4</span>
+                    </button>
+                    <button onclick="showTab('cases')" class="sidebar-item w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-800 transition" data-tab="cases">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        <span>Case Review</span>
+                        <span class="ml-auto bg-shock-red text-white text-xs px-2 py-1 rounded-full">7</span>
+                    </button>
+                    <button onclick="showTab('hospitals')" class="sidebar-item w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-800 transition" data-tab="hospitals">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                        <span>Hospitals</span>
+                    </button>
+                    <button onclick="showTab('reports')" class="sidebar-item w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-800 transition" data-tab="reports">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                        <span>Reports</span>
+                    </button>
+                    <button onclick="showTab('audit')" class="sidebar-item w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-800 transition" data-tab="audit">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <span>Audit Log</span>
+                    </button>
+                </nav>
+
+                <div class="absolute bottom-0 w-64 p-4 border-t border-gray-700">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center">
+                            <span class="text-white font-bold">SA</span>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-sm font-medium">Super Admin</p>
+                            <p class="text-xs text-gray-400">Full Access</p>
+                        </div>
+                        <button onclick="showScreen('login-screen')" class="text-gray-400 hover:text-white">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                        </button>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="flex-1 overflow-auto">
+                <!-- Top Bar -->
+                <header class="bg-white shadow-sm px-6 py-4 flex items-center justify-between">
+                    <div>
+                        <h2 id="page-title" class="text-xl font-bold text-gray-800">Dashboard</h2>
+                        <p class="text-sm text-gray-500">Network Overview</p>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <button class="relative p-2 text-gray-500 hover:text-gray-700">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                            <span class="absolute top-0 right-0 w-4 h-4 bg-shock-red text-white text-xs rounded-full flex items-center justify-center">3</span>
+                        </button>
+                        <span class="text-gray-400">|</span>
+                        <span class="text-sm text-gray-600">Jan 14, 2026</span>
+                    </div>
+                </header>
+
+                <div class="p-6">
+                    <!-- ========================================== -->
+                    <!-- TAB: DASHBOARD -->
+                    <!-- ========================================== -->
+                    <div id="tab-dashboard" class="tab-content">
+                        <!-- Stats Row 1 -->
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                            <div class="bg-white rounded-xl shadow p-6">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-gray-500 text-sm">Pending Cases</p>
+                                        <p class="text-3xl font-bold text-shock-red">7</p>
+                                        <p class="text-xs text-gray-400 mt-1">Awaiting review</p>
+                                    </div>
+                                    <div class="w-12 h-12 bg-shock-red-light rounded-full flex items-center justify-center">
+                                        <svg class="w-6 h-6 text-shock-red" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bg-white rounded-xl shadow p-6">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-gray-500 text-sm">Pending Subscriptions</p>
+                                        <p class="text-3xl font-bold text-shock-orange">4</p>
+                                        <p class="text-xs text-gray-400 mt-1">Hospital requests</p>
+                                    </div>
+                                    <div class="w-12 h-12 bg-shock-orange-light rounded-full flex items-center justify-center">
+                                        <svg class="w-6 h-6 text-shock-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bg-white rounded-xl shadow p-6">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-gray-500 text-sm">Active Patients</p>
+                                        <p class="text-3xl font-bold text-shock-teal">156</p>
+                                        <p class="text-xs text-gray-400 mt-1">Across network</p>
+                                    </div>
+                                    <div class="w-12 h-12 bg-shock-teal-light rounded-full flex items-center justify-center">
+                                        <svg class="w-6 h-6 text-shock-teal" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bg-white rounded-xl shadow p-6">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-gray-500 text-sm">Hospitals Online</p>
+                                        <p class="text-3xl font-bold text-shock-green">23</p>
+                                        <p class="text-xs text-gray-400 mt-1">Active subscriptions</p>
+                                    </div>
+                                    <div class="w-12 h-12 bg-shock-green-light rounded-full flex items-center justify-center">
+                                        <svg class="w-6 h-6 text-shock-green" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Stats Row 2 -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                            <div class="bg-white rounded-xl shadow p-6">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-gray-500 text-sm">Expiring Soon</p>
+                                        <p class="text-3xl font-bold text-yellow-600">3</p>
+                                        <p class="text-xs text-gray-400 mt-1">Subscriptions (30 days)</p>
+                                    </div>
+                                    <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
+                                        <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bg-white rounded-xl shadow p-6">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-gray-500 text-sm">This Month</p>
+                                        <p class="text-3xl font-bold text-gray-700">342</p>
+                                        <p class="text-xs text-gray-400 mt-1">Total submissions</p>
+                                    </div>
+                                    <div class="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
+                                        <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bg-white rounded-xl shadow p-6">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-gray-500 text-sm">Mortality Rate</p>
+                                        <p class="text-3xl font-bold text-gray-700">18.2%</p>
+                                        <p class="text-xs text-gray-400 mt-1">Network average</p>
+                                    </div>
+                                    <div class="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
+                                        <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Recent Activity -->
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div class="bg-white rounded-xl shadow p-6">
+                                <div class="flex items-center justify-between mb-4">
+                                    <h3 class="font-semibold text-gray-800">Urgent Cases</h3>
+                                    <button onclick="showTab('cases')" class="text-sm text-admin-blue hover:underline">View All</button>
+                                </div>
+                                <div class="space-y-3">
+                                    <div class="flex items-center justify-between p-3 bg-shock-red-light rounded-lg">
+                                        <div class="flex items-center space-x-3">
+                                            <span class="anonymization-badge px-2 py-1 rounded text-xs font-mono">ALPHA-7K2M9X</span>
+                                            <div>
+                                                <p class="text-gray-800 text-sm font-medium">Cardiogenic - SCAI E</p>
+                                                <p class="text-gray-500 text-xs">City General Hospital</p>
+                                            </div>
+                                        </div>
+                                        <span class="text-shock-red text-xs font-medium">URGENT</span>
+                                    </div>
+                                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                        <div class="flex items-center space-x-3">
+                                            <span class="anonymization-badge px-2 py-1 rounded text-xs font-mono">BETA-3N8P2Q</span>
+                                            <div>
+                                                <p class="text-gray-800 text-sm font-medium">Septic - SCAI D</p>
+                                                <p class="text-gray-500 text-xs">Regional Medical Center</p>
+                                            </div>
+                                        </div>
+                                        <span class="text-shock-orange text-xs font-medium">HIGH</span>
+                                    </div>
+                                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                        <div class="flex items-center space-x-3">
+                                            <span class="anonymization-badge px-2 py-1 rounded text-xs font-mono">GAMMA-5R1T4W</span>
+                                            <div>
+                                                <p class="text-gray-800 text-sm font-medium">Mixed - SCAI D</p>
+                                                <p class="text-gray-500 text-xs">University Hospital</p>
+                                            </div>
+                                        </div>
+                                        <span class="text-shock-orange text-xs font-medium">HIGH</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="bg-white rounded-xl shadow p-6">
+                                <div class="flex items-center justify-between mb-4">
+                                    <h3 class="font-semibold text-gray-800">Pending Subscriptions</h3>
+                                    <button onclick="showTab('subscriptions')" class="text-sm text-admin-blue hover:underline">View All</button>
+                                </div>
+                                <div class="space-y-3">
+                                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                        <div>
+                                            <p class="text-gray-800 text-sm font-medium">St. Mary's Hospital</p>
+                                            <p class="text-gray-500 text-xs">Requested: Premium Tier</p>
+                                        </div>
+                                        <span class="status-pending px-2 py-1 rounded text-xs">Pending</span>
+                                    </div>
+                                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                        <div>
+                                            <p class="text-gray-800 text-sm font-medium">Metro Health Center</p>
+                                            <p class="text-gray-500 text-xs">Requested: Standard Tier</p>
+                                        </div>
+                                        <span class="status-pending px-2 py-1 rounded text-xs">Pending</span>
+                                    </div>
+                                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                        <div>
+                                            <p class="text-gray-800 text-sm font-medium">County General</p>
+                                            <p class="text-gray-500 text-xs">Requested: Basic Tier</p>
+                                        </div>
+                                        <span class="status-pending px-2 py-1 rounded text-xs">Pending</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ========================================== -->
+                    <!-- TAB: SUBSCRIPTIONS -->
+                    <!-- ========================================== -->
+                    <div id="tab-subscriptions" class="tab-content hidden">
+                        <div class="flex justify-between items-center mb-6">
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-800">Subscription Management</h3>
+                                <p class="text-sm text-gray-500">Review and approve hospital subscription requests</p>
+                            </div>
+                            <div class="flex space-x-2">
+                                <select class="px-4 py-2 border rounded-lg text-gray-600">
+                                    <option>All Requests</option>
+                                    <option>Pending</option>
+                                    <option>Approved</option>
+                                    <option>Rejected</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Pending Queue -->
+                        <div class="bg-white rounded-xl shadow mb-6">
+                            <div class="px-6 py-4 border-b">
+                                <h4 class="font-semibold text-gray-800">Pending Requests (4)</h4>
+                            </div>
+                            <div class="divide-y">
+                                <div class="p-6 hover:bg-gray-50">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center space-x-4">
+                                            <div class="w-12 h-12 bg-shock-orange-light rounded-lg flex items-center justify-center">
+                                                <svg class="w-6 h-6 text-shock-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                                            </div>
+                                            <div>
+                                                <p class="font-semibold text-gray-800">St. Mary's Hospital</p>
+                                                <p class="text-sm text-gray-500">Downtown District | University Hospital</p>
+                                                <p class="text-xs text-gray-400 mt-1">Requested: Jan 12, 2026</p>
+                                            </div>
+                                        </div>
+                                        <div class="text-right">
+                                            <span class="tier-premium px-3 py-1 rounded-full text-sm font-medium">Premium</span>
+                                            <p class="text-xs text-gray-400 mt-2">50 patients/month</p>
+                                        </div>
+                                    </div>
+                                    <div class="mt-4 flex items-center justify-between">
+                                        <div class="flex items-center space-x-4 text-sm text-gray-500">
+                                            <span>ICU Beds: 32</span>
+                                            <span>|</span>
+                                            <span>Physicians: 18</span>
+                                            <span>|</span>
+                                            <span>License: Verified</span>
+                                        </div>
+                                        <div class="flex space-x-2">
+                                            <button onclick="showSubscriptionModal('reject')" class="px-4 py-2 border border-shock-red text-shock-red rounded-lg hover:bg-shock-red-light">Reject</button>
+                                            <button onclick="showSubscriptionModal('approve')" class="px-4 py-2 bg-shock-green text-white rounded-lg hover:bg-green-700">Approve</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="p-6 hover:bg-gray-50">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center space-x-4">
+                                            <div class="w-12 h-12 bg-shock-orange-light rounded-lg flex items-center justify-center">
+                                                <svg class="w-6 h-6 text-shock-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                                            </div>
+                                            <div>
+                                                <p class="font-semibold text-gray-800">Metro Health Center</p>
+                                                <p class="text-sm text-gray-500">West Side | General Hospital</p>
+                                                <p class="text-xs text-gray-400 mt-1">Requested: Jan 11, 2026</p>
+                                            </div>
+                                        </div>
+                                        <div class="text-right">
+                                            <span class="tier-standard px-3 py-1 rounded-full text-sm font-medium">Standard</span>
+                                            <p class="text-xs text-gray-400 mt-2">25 patients/month</p>
+                                        </div>
+                                    </div>
+                                    <div class="mt-4 flex items-center justify-between">
+                                        <div class="flex items-center space-x-4 text-sm text-gray-500">
+                                            <span>ICU Beds: 16</span>
+                                            <span>|</span>
+                                            <span>Physicians: 8</span>
+                                            <span>|</span>
+                                            <span>License: Verified</span>
+                                        </div>
+                                        <div class="flex space-x-2">
+                                            <button class="px-4 py-2 border border-shock-red text-shock-red rounded-lg hover:bg-shock-red-light">Reject</button>
+                                            <button class="px-4 py-2 bg-shock-green text-white rounded-lg hover:bg-green-700">Approve</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Active Subscriptions Summary -->
+                        <div class="bg-white rounded-xl shadow p-6">
+                            <h4 class="font-semibold text-gray-800 mb-4">Active Subscriptions by Tier</h4>
+                            <div class="grid grid-cols-4 gap-4">
+                                <div class="text-center p-4 bg-gray-100 rounded-lg">
+                                    <p class="text-2xl font-bold text-gray-600">5</p>
+                                    <p class="text-sm text-gray-500">Basic</p>
+                                </div>
+                                <div class="text-center p-4 bg-admin-blue-light rounded-lg">
+                                    <p class="text-2xl font-bold text-admin-blue">8</p>
+                                    <p class="text-sm text-gray-600">Standard</p>
+                                </div>
+                                <div class="text-center p-4 bg-shock-green-light rounded-lg">
+                                    <p class="text-2xl font-bold text-shock-green">7</p>
+                                    <p class="text-sm text-gray-600">Premium</p>
+                                </div>
+                                <div class="text-center p-4 bg-shock-purple-light rounded-lg">
+                                    <p class="text-2xl font-bold text-shock-purple">3</p>
+                                    <p class="text-sm text-gray-600">Unlimited</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ========================================== -->
+                    <!-- TAB: CASE REVIEW -->
+                    <!-- ========================================== -->
+                    <div id="tab-cases" class="tab-content hidden">
+                        <div class="flex justify-between items-center mb-6">
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-800">Patient Case Review</h3>
+                                <p class="text-sm text-gray-500">Review anonymized patient submissions</p>
+                            </div>
+                            <div class="flex space-x-2">
+                                <select class="px-4 py-2 border rounded-lg text-gray-600">
+                                    <option>Sort by Urgency</option>
+                                    <option>Sort by Date</option>
+                                    <option>Sort by Hospital</option>
+                                </select>
+                                <select class="px-4 py-2 border rounded-lg text-gray-600">
+                                    <option>All Cases</option>
+                                    <option>Pending</option>
+                                    <option>Under Review</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Pending Cases Queue -->
+                        <div class="bg-white rounded-xl shadow">
+                            <div class="px-6 py-4 border-b flex items-center justify-between">
+                                <h4 class="font-semibold text-gray-800">Pending Cases (7)</h4>
+                                <div class="flex items-center space-x-2 text-sm">
+                                    <span class="w-3 h-3 bg-shock-red rounded-full"></span>
+                                    <span class="text-gray-500">SCAI E</span>
+                                    <span class="w-3 h-3 bg-shock-orange rounded-full ml-2"></span>
+                                    <span class="text-gray-500">SCAI D</span>
+                                    <span class="w-3 h-3 bg-yellow-500 rounded-full ml-2"></span>
+                                    <span class="text-gray-500">SCAI C</span>
+                                </div>
+                            </div>
+                            <div class="divide-y">
+                                <!-- Case 1 - URGENT -->
+                                <div class="p-6 bg-shock-red-light bg-opacity-30 hover:bg-shock-red-light cursor-pointer" onclick="showCaseModal()">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center space-x-4">
+                                            <div class="w-12 h-12 bg-shock-red rounded-lg flex items-center justify-center text-white font-bold">E</div>
+                                            <div>
+                                                <div class="flex items-center space-x-2">
+                                                    <span class="anonymization-badge px-2 py-1 rounded text-sm font-mono">ALPHA-7K2M9X</span>
+                                                    <span class="bg-shock-red text-white text-xs px-2 py-1 rounded">URGENT</span>
+                                                </div>
+                                                <p class="text-sm text-gray-600 mt-1">Cardiogenic Shock | 67yo M | City General Hospital</p>
+                                                <p class="text-xs text-gray-400 mt-1">Submitted: 2 hours ago | MAP: 52 | Lactate: 6.8</p>
+                                            </div>
+                                        </div>
+                                        <div class="text-right">
+                                            <p class="text-sm font-medium text-gray-700">Criteria Score</p>
+                                            <p class="text-2xl font-bold text-shock-red">5/5</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Case 2 -->
+                                <div class="p-6 hover:bg-gray-50 cursor-pointer" onclick="showCaseModal()">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center space-x-4">
+                                            <div class="w-12 h-12 bg-shock-orange rounded-lg flex items-center justify-center text-white font-bold">D</div>
+                                            <div>
+                                                <div class="flex items-center space-x-2">
+                                                    <span class="anonymization-badge px-2 py-1 rounded text-sm font-mono">BETA-3N8P2Q</span>
+                                                    <span class="bg-shock-orange text-white text-xs px-2 py-1 rounded">HIGH</span>
+                                                </div>
+                                                <p class="text-sm text-gray-600 mt-1">Septic Shock | 54yo F | Regional Medical Center</p>
+                                                <p class="text-xs text-gray-400 mt-1">Submitted: 4 hours ago | MAP: 58 | Lactate: 4.2</p>
+                                            </div>
+                                        </div>
+                                        <div class="text-right">
+                                            <p class="text-sm font-medium text-gray-700">Criteria Score</p>
+                                            <p class="text-2xl font-bold text-shock-orange">4/5</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Case 3 -->
+                                <div class="p-6 hover:bg-gray-50 cursor-pointer" onclick="showCaseModal()">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center space-x-4">
+                                            <div class="w-12 h-12 bg-shock-orange rounded-lg flex items-center justify-center text-white font-bold">D</div>
+                                            <div>
+                                                <div class="flex items-center space-x-2">
+                                                    <span class="anonymization-badge px-2 py-1 rounded text-sm font-mono">GAMMA-5R1T4W</span>
+                                                </div>
+                                                <p class="text-sm text-gray-600 mt-1">Mixed Shock | 72yo M | University Hospital</p>
+                                                <p class="text-xs text-gray-400 mt-1">Submitted: 6 hours ago | MAP: 60 | Lactate: 3.8</p>
+                                            </div>
+                                        </div>
+                                        <div class="text-right">
+                                            <p class="text-sm font-medium text-gray-700">Criteria Score</p>
+                                            <p class="text-2xl font-bold text-shock-orange">4/5</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Case 4 -->
+                                <div class="p-6 hover:bg-gray-50 cursor-pointer">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center space-x-4">
+                                            <div class="w-12 h-12 bg-yellow-500 rounded-lg flex items-center justify-center text-white font-bold">C</div>
+                                            <div>
+                                                <div class="flex items-center space-x-2">
+                                                    <span class="anonymization-badge px-2 py-1 rounded text-sm font-mono">DELTA-9M4K7L</span>
+                                                </div>
+                                                <p class="text-sm text-gray-600 mt-1">Hypovolemic Shock | 45yo F | Metro Health</p>
+                                                <p class="text-xs text-gray-400 mt-1">Submitted: 8 hours ago | MAP: 62 | Lactate: 2.8</p>
+                                            </div>
+                                        </div>
+                                        <div class="text-right">
+                                            <p class="text-sm font-medium text-gray-700">Criteria Score</p>
+                                            <p class="text-2xl font-bold text-yellow-600">3/5</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ========================================== -->
+                    <!-- TAB: HOSPITALS -->
+                    <!-- ========================================== -->
+                    <div id="tab-hospitals" class="tab-content hidden">
+                        <div class="flex justify-between items-center mb-6">
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-800">Hospital Monitoring</h3>
+                                <p class="text-sm text-gray-500">View all registered hospitals in the network</p>
+                            </div>
+                            <div class="flex space-x-2">
+                                <input type="text" placeholder="Search hospitals..." class="px-4 py-2 border rounded-lg">
+                                <select class="px-4 py-2 border rounded-lg text-gray-600">
+                                    <option>All Tiers</option>
+                                    <option>Basic</option>
+                                    <option>Standard</option>
+                                    <option>Premium</option>
+                                    <option>Unlimited</option>
+                                </select>
+                                <select class="px-4 py-2 border rounded-lg text-gray-600">
+                                    <option>All Regions</option>
+                                    <option>North</option>
+                                    <option>South</option>
+                                    <option>East</option>
+                                    <option>West</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-xl shadow overflow-hidden">
+                            <table class="w-full">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Hospital</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tier</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Usage</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Active Patients</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Expiry</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200">
+                                    <tr class="hover:bg-gray-50 cursor-pointer" onclick="showHospitalModal()">
+                                        <td class="px-6 py-4">
+                                            <div>
+                                                <p class="font-medium text-gray-800">City General Hospital</p>
+                                                <p class="text-xs text-gray-500">Downtown District</p>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 text-gray-600">University</td>
+                                        <td class="px-6 py-4"><span class="tier-premium px-2 py-1 rounded text-sm">Premium</span></td>
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center">
+                                                <div class="w-24 h-2 bg-gray-200 rounded-full mr-2">
+                                                    <div class="w-3/5 h-2 bg-shock-green rounded-full"></div>
+                                                </div>
+                                                <span class="text-sm text-gray-600">30/50</span>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 text-gray-600">12</td>
+                                        <td class="px-6 py-4 text-gray-600">Dec 31, 2026</td>
+                                        <td class="px-6 py-4"><span class="status-active px-2 py-1 rounded text-xs">Active</span></td>
+                                    </tr>
+                                    <tr class="hover:bg-gray-50 cursor-pointer">
+                                        <td class="px-6 py-4">
+                                            <div>
+                                                <p class="font-medium text-gray-800">Regional Medical Center</p>
+                                                <p class="text-xs text-gray-500">North District</p>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 text-gray-600">General</td>
+                                        <td class="px-6 py-4"><span class="tier-standard px-2 py-1 rounded text-sm">Standard</span></td>
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center">
+                                                <div class="w-24 h-2 bg-gray-200 rounded-full mr-2">
+                                                    <div class="w-4/5 h-2 bg-shock-orange rounded-full"></div>
+                                                </div>
+                                                <span class="text-sm text-gray-600">20/25</span>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 text-gray-600">8</td>
+                                        <td class="px-6 py-4 text-gray-600">Jun 30, 2026</td>
+                                        <td class="px-6 py-4"><span class="status-active px-2 py-1 rounded text-xs">Active</span></td>
+                                    </tr>
+                                    <tr class="hover:bg-gray-50 cursor-pointer">
+                                        <td class="px-6 py-4">
+                                            <div>
+                                                <p class="font-medium text-gray-800">University Hospital</p>
+                                                <p class="text-xs text-gray-500">Academic District</p>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 text-gray-600">University</td>
+                                        <td class="px-6 py-4"><span class="tier-unlimited px-2 py-1 rounded text-sm">Unlimited</span></td>
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center">
+                                                <span class="text-sm text-gray-600">45 this month</span>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 text-gray-600">18</td>
+                                        <td class="px-6 py-4 text-gray-600">Dec 31, 2026</td>
+                                        <td class="px-6 py-4"><span class="status-active px-2 py-1 rounded text-xs">Active</span></td>
+                                    </tr>
+                                    <tr class="hover:bg-gray-50 cursor-pointer bg-yellow-50">
+                                        <td class="px-6 py-4">
+                                            <div>
+                                                <p class="font-medium text-gray-800">Community Care Hospital</p>
+                                                <p class="text-xs text-gray-500">South District</p>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 text-gray-600">Regional</td>
+                                        <td class="px-6 py-4"><span class="tier-basic px-2 py-1 rounded text-sm">Basic</span></td>
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center">
+                                                <div class="w-24 h-2 bg-gray-200 rounded-full mr-2">
+                                                    <div class="w-full h-2 bg-shock-red rounded-full"></div>
+                                                </div>
+                                                <span class="text-sm text-shock-red">10/10</span>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 text-gray-600">4</td>
+                                        <td class="px-6 py-4 text-yellow-600 font-medium">Feb 15, 2026</td>
+                                        <td class="px-6 py-4"><span class="status-expiring px-2 py-1 rounded text-xs">Expiring</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- ========================================== -->
+                    <!-- TAB: REPORTS -->
+                    <!-- ========================================== -->
+                    <div id="tab-reports" class="tab-content hidden">
+                        <div class="flex justify-between items-center mb-6">
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-800">Reports & Analytics</h3>
+                                <p class="text-sm text-gray-500">Generate network-wide reports and statistics</p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                            <!-- Report Type Selection -->
+                            <div class="bg-white rounded-xl shadow p-6">
+                                <h4 class="font-semibold text-gray-800 mb-4">Select Report Type</h4>
+                                <div class="space-y-3">
+                                    <label class="flex items-center p-4 border-2 border-shock-cyan rounded-lg bg-shock-cyan-light cursor-pointer">
+                                        <input type="radio" name="report" class="mr-3" checked>
+                                        <div>
+                                            <p class="font-medium text-gray-800">Network Summary</p>
+                                            <p class="text-sm text-gray-500">Overall network statistics and KPIs</p>
+                                        </div>
+                                    </label>
+                                    <label class="flex items-center p-4 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                                        <input type="radio" name="report" class="mr-3">
+                                        <div>
+                                            <p class="font-medium text-gray-800">Hospital Performance</p>
+                                            <p class="text-sm text-gray-500">Individual hospital metrics and comparisons</p>
+                                        </div>
+                                    </label>
+                                    <label class="flex items-center p-4 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                                        <input type="radio" name="report" class="mr-3">
+                                        <div>
+                                            <p class="font-medium text-gray-800">Patient Outcomes</p>
+                                            <p class="text-sm text-gray-500">Mortality rates, LOS, shock type analysis</p>
+                                        </div>
+                                    </label>
+                                    <label class="flex items-center p-4 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                                        <input type="radio" name="report" class="mr-3">
+                                        <div>
+                                            <p class="font-medium text-gray-800">Subscription Revenue</p>
+                                            <p class="text-sm text-gray-500">Financial overview and projections</p>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Date Range & Filters -->
+                            <div class="bg-white rounded-xl shadow p-6">
+                                <h4 class="font-semibold text-gray-800 mb-4">Date Range & Filters</h4>
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Date Range</label>
+                                        <select class="w-full px-4 py-2 border rounded-lg">
+                                            <option>This Month</option>
+                                            <option>Last Month</option>
+                                            <option>Last 3 Months</option>
+                                            <option>Last 6 Months</option>
+                                            <option>This Year</option>
+                                            <option>Custom Range</option>
+                                        </select>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">From</label>
+                                            <input type="date" value="2026-01-01" class="w-full px-4 py-2 border rounded-lg">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">To</label>
+                                            <input type="date" value="2026-01-14" class="w-full px-4 py-2 border rounded-lg">
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Hospital Filter</label>
+                                        <select class="w-full px-4 py-2 border rounded-lg">
+                                            <option>All Hospitals</option>
+                                            <option>City General Hospital</option>
+                                            <option>Regional Medical Center</option>
+                                            <option>University Hospital</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Shock Type</label>
+                                        <select class="w-full px-4 py-2 border rounded-lg">
+                                            <option>All Types</option>
+                                            <option>Cardiogenic</option>
+                                            <option>Septic</option>
+                                            <option>Hypovolemic</option>
+                                            <option>Mixed</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="mt-6 flex space-x-3">
+                                    <button class="flex-1 px-4 py-2 bg-shock-cyan text-white rounded-lg hover:bg-cyan-700">Generate Report</button>
+                                    <button class="px-4 py-2 border rounded-lg text-gray-600 hover:bg-gray-50">Export PDF</button>
+                                    <button class="px-4 py-2 border rounded-lg text-gray-600 hover:bg-gray-50">Export CSV</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sample Report Preview -->
+                        <div class="bg-white rounded-xl shadow p-6">
+                            <h4 class="font-semibold text-gray-800 mb-4">Network Summary - January 2026</h4>
+                            <div class="grid grid-cols-4 gap-4 mb-6">
+                                <div class="text-center p-4 bg-gray-50 rounded-lg">
+                                    <p class="text-3xl font-bold text-gray-800">342</p>
+                                    <p class="text-sm text-gray-500">Total Submissions</p>
+                                </div>
+                                <div class="text-center p-4 bg-gray-50 rounded-lg">
+                                    <p class="text-3xl font-bold text-shock-green">298</p>
+                                    <p class="text-sm text-gray-500">Approved</p>
+                                </div>
+                                <div class="text-center p-4 bg-gray-50 rounded-lg">
+                                    <p class="text-3xl font-bold text-shock-red">18.2%</p>
+                                    <p class="text-sm text-gray-500">Mortality Rate</p>
+                                </div>
+                                <div class="text-center p-4 bg-gray-50 rounded-lg">
+                                    <p class="text-3xl font-bold text-gray-800">4.2</p>
+                                    <p class="text-sm text-gray-500">Avg LOS (days)</p>
+                                </div>
+                            </div>
+                            <div class="h-48 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400">
+                                [Chart Placeholder - Submissions over time]
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ========================================== -->
+                    <!-- TAB: AUDIT LOG -->
+                    <!-- ========================================== -->
+                    <div id="tab-audit" class="tab-content hidden">
+                        <div class="flex justify-between items-center mb-6">
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-800">Audit Log</h3>
+                                <p class="text-sm text-gray-500">System activity and change history</p>
+                            </div>
+                            <div class="flex space-x-2">
+                                <select class="px-4 py-2 border rounded-lg text-gray-600">
+                                    <option>All Actions</option>
+                                    <option>Approvals</option>
+                                    <option>Rejections</option>
+                                    <option>Subscriptions</option>
+                                    <option>Data Changes</option>
+                                </select>
+                                <input type="date" class="px-4 py-2 border rounded-lg">
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-xl shadow">
+                            <div class="divide-y">
+                                <div class="p-4 flex items-center space-x-4">
+                                    <div class="w-10 h-10 bg-shock-green-light rounded-full flex items-center justify-center">
+                                        <svg class="w-5 h-5 text-shock-green" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="text-sm text-gray-800">Case <span class="font-mono text-shock-purple">ZETA-2K7M9P</span> approved</p>
+                                        <p class="text-xs text-gray-500">Admin: super_admin | Hospital: City General</p>
+                                    </div>
+                                    <span class="text-xs text-gray-400">2 min ago</span>
+                                </div>
+                                <div class="p-4 flex items-center space-x-4">
+                                    <div class="w-10 h-10 bg-shock-orange-light rounded-full flex items-center justify-center">
+                                        <svg class="w-5 h-5 text-shock-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="text-sm text-gray-800">Subscription activated for <span class="font-medium">Metro Health Center</span></p>
+                                        <p class="text-xs text-gray-500">Tier: Standard | Contract: NSN-CONT-2026-0048</p>
+                                    </div>
+                                    <span class="text-xs text-gray-400">15 min ago</span>
+                                </div>
+                                <div class="p-4 flex items-center space-x-4">
+                                    <div class="w-10 h-10 bg-admin-blue-light rounded-full flex items-center justify-center">
+                                        <svg class="w-5 h-5 text-admin-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="text-sm text-gray-800">Case <span class="font-mono text-shock-purple">EPSILON-3N8P2Q</span> returned for additional info</p>
+                                        <p class="text-xs text-gray-500">Admin: reviewer_01 | Reason: Missing echo data</p>
+                                    </div>
+                                    <span class="text-xs text-gray-400">1 hour ago</span>
+                                </div>
+                                <div class="p-4 flex items-center space-x-4">
+                                    <div class="w-10 h-10 bg-shock-red-light rounded-full flex items-center justify-center">
+                                        <svg class="w-5 h-5 text-shock-red" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="text-sm text-gray-800">Subscription request rejected for <span class="font-medium">Small Clinic ABC</span></p>
+                                        <p class="text-xs text-gray-500">Reason: Insufficient ICU capacity</p>
+                                    </div>
+                                    <span class="text-xs text-gray-400">3 hours ago</span>
+                                </div>
+                                <div class="p-4 flex items-center space-x-4">
+                                    <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
+                                        <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="text-sm text-gray-800">Admin login: <span class="font-medium">super_admin</span></p>
+                                        <p class="text-xs text-gray-500">IP: 192.168.1.100</p>
+                                    </div>
+                                    <span class="text-xs text-gray-400">4 hours ago</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODAL: CASE REVIEW -->
+    <!-- ========================================== -->
+    <div id="case-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-auto m-4">
+            <div class="px-6 py-4 border-b flex items-center justify-between bg-shock-purple-light">
+                <div class="flex items-center space-x-3">
+                    <span class="text-2xl font-mono font-bold text-shock-purple">ALPHA-7K2M9X</span>
+                    <span class="bg-shock-red text-white px-2 py-1 rounded text-sm">SCAI E - URGENT</span>
+                </div>
+                <button onclick="closeCaseModal()" class="text-gray-500 hover:text-gray-700">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div class="p-6">
+                <div class="grid grid-cols-2 gap-6 mb-6">
+                    <div>
+                        <h4 class="font-semibold text-gray-800 mb-3">Patient Information (Anonymized)</h4>
+                        <div class="bg-gray-50 rounded-lg p-4 space-y-2">
+                            <div class="flex justify-between"><span class="text-gray-500">Age / Gender:</span><span class="font-medium">67 / Male</span></div>
+                            <div class="flex justify-between"><span class="text-gray-500">Weight / Height:</span><span class="font-medium">82 kg / 175 cm</span></div>
+                            <div class="flex justify-between"><span class="text-gray-500">BMI:</span><span class="font-medium">26.8</span></div>
+                            <div class="flex justify-between"><span class="text-gray-500">QR Code:</span><span class="font-mono text-sm">NSN-202601-0001234</span></div>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-gray-800 mb-3">Submission Details</h4>
+                        <div class="bg-gray-50 rounded-lg p-4 space-y-2">
+                            <div class="flex justify-between"><span class="text-gray-500">Hospital:</span><span class="font-medium">City General Hospital</span></div>
+                            <div class="flex justify-between"><span class="text-gray-500">Physician:</span><span class="font-medium">Dr. Smith (License: PHY-12345)</span></div>
+                            <div class="flex justify-between"><span class="text-gray-500">Submitted:</span><span class="font-medium">Jan 14, 2026 14:32</span></div>
+                            <div class="flex justify-between"><span class="text-gray-500">Shock Onset:</span><span class="font-medium">Jan 14, 2026 10:00</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <h4 class="font-semibold text-gray-800 mb-3">Admission Criteria Check</h4>
+                <div class="grid grid-cols-5 gap-3 mb-6">
+                    <div class="bg-shock-green-light p-3 rounded-lg text-center">
+                        <p class="text-xs text-gray-500">MAP</p>
+                        <p class="text-lg font-bold text-shock-green">52 mmHg</p>
+                        <p class="text-xs text-shock-green">< 65 MET</p>
+                    </div>
+                    <div class="bg-shock-green-light p-3 rounded-lg text-center">
+                        <p class="text-xs text-gray-500">SBP</p>
+                        <p class="text-lg font-bold text-shock-green">78 mmHg</p>
+                        <p class="text-xs text-shock-green">< 90 MET</p>
+                    </div>
+                    <div class="bg-shock-green-light p-3 rounded-lg text-center">
+                        <p class="text-xs text-gray-500">Lactate</p>
+                        <p class="text-lg font-bold text-shock-green">6.8 mmol/L</p>
+                        <p class="text-xs text-shock-green">> 2.0 MET</p>
+                    </div>
+                    <div class="bg-shock-green-light p-3 rounded-lg text-center">
+                        <p class="text-xs text-gray-500">SCAI Stage</p>
+                        <p class="text-lg font-bold text-shock-green">E</p>
+                        <p class="text-xs text-shock-green">Extremis</p>
+                    </div>
+                    <div class="bg-shock-green-light p-3 rounded-lg text-center">
+                        <p class="text-xs text-gray-500">Shock Type</p>
+                        <p class="text-lg font-bold text-shock-green">Cardiogenic</p>
+                        <p class="text-xs text-shock-green">Specified</p>
+                    </div>
+                </div>
+
+                <div class="bg-shock-green-light border border-shock-green rounded-lg p-4 mb-6">
+                    <div class="flex items-center space-x-2">
+                        <svg class="w-6 h-6 text-shock-green" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <span class="font-semibold text-shock-green">Criteria Score: 5/5 - All admission criteria met</span>
+                    </div>
+                </div>
+
+                <h4 class="font-semibold text-gray-800 mb-3">Supporting Documents</h4>
+                <div class="flex space-x-3 mb-6">
+                    <div class="p-3 border rounded-lg text-center hover:bg-gray-50 cursor-pointer">
+                        <svg class="w-8 h-8 text-gray-400 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        <p class="text-xs text-gray-600">ECG.pdf</p>
+                    </div>
+                    <div class="p-3 border rounded-lg text-center hover:bg-gray-50 cursor-pointer">
+                        <svg class="w-8 h-8 text-gray-400 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                        <p class="text-xs text-gray-600">Echo.jpg</p>
+                    </div>
+                    <div class="p-3 border rounded-lg text-center hover:bg-gray-50 cursor-pointer">
+                        <svg class="w-8 h-8 text-gray-400 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        <p class="text-xs text-gray-600">Labs.pdf</p>
+                    </div>
+                </div>
+
+                <div class="border-t pt-4">
+                    <h4 class="font-semibold text-gray-800 mb-3">Decision</h4>
+                    <div class="flex space-x-3">
+                        <button onclick="alert('Case ALPHA-7K2M9X REJECTED'); closeCaseModal();" class="flex-1 px-4 py-3 border-2 border-shock-red text-shock-red rounded-lg hover:bg-shock-red-light font-medium">
+                            Reject Case
+                        </button>
+                        <button onclick="alert('Additional info requested for ALPHA-7K2M9X'); closeCaseModal();" class="flex-1 px-4 py-3 border-2 border-admin-blue text-admin-blue rounded-lg hover:bg-admin-blue-light font-medium">
+                            Request Info
+                        </button>
+                        <button onclick="alert('Case ALPHA-7K2M9X APPROVED!\nCase Number: NSN-CASE-2026-0892'); closeCaseModal();" class="flex-1 px-4 py-3 bg-shock-green text-white rounded-lg hover:bg-green-700 font-medium">
+                            Approve Case
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Screen Management
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+            if (screenId === 'app-container') {
+                showTab('dashboard');
+            }
+        }
+
+        // Tab Management
+        function showTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
+            document.getElementById('tab-' + tabId).classList.remove('hidden');
+            document.querySelectorAll('.sidebar-item').forEach(n => {
+                n.classList.remove('active');
+                n.classList.add('text-gray-300');
+                if (n.dataset.tab === tabId) {
+                    n.classList.add('active');
+                    n.classList.remove('text-gray-300');
+                }
+            });
+
+            // Update page title
+            const titles = {
+                'dashboard': ['Dashboard', 'Network Overview'],
+                'subscriptions': ['Subscriptions', 'Hospital subscription management'],
+                'cases': ['Case Review', 'Patient submission approvals'],
+                'hospitals': ['Hospitals', 'Network hospital monitoring'],
+                'reports': ['Reports', 'Analytics and statistics'],
+                'audit': ['Audit Log', 'System activity history']
+            };
+            if (titles[tabId]) {
+                document.getElementById('page-title').textContent = titles[tabId][0];
+                document.getElementById('page-title').nextElementSibling.textContent = titles[tabId][1];
+            }
+        }
+
+        // Case Modal
+        function showCaseModal() {
+            document.getElementById('case-modal').classList.remove('hidden');
+        }
+
+        function closeCaseModal() {
+            document.getElementById('case-modal').classList.add('hidden');
+        }
+
+        // Subscription Modal placeholder
+        function showSubscriptionModal(action) {
+            if (action === 'approve') {
+                alert("Subscription approved for St. Mary's Hospital!\nTier: Premium\nContract: NSN-CONT-2026-0049");
+            } else {
+                alert("Subscription rejected for St. Mary's Hospital");
+            }
+        }
+
+        // Hospital Modal placeholder
+        function showHospitalModal() {
+            alert("Hospital Details:\nCity General Hospital\nActive Patients: 12\nMonthly Usage: 30/50\nSubscription: Premium (Active)");
+        }
+    </script>
+
+</body>
+</html>
