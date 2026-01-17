@@ -1,10 +1,33 @@
 erDiagram
+    %% ============================================================================
+    %% NATIONAL SHOCK REGISTRY - DATABASE SCHEMA
+    %% ============================================================================
+    %%
+    %% Architecture:
+    %%   - INFRASTRUCTURE: Hospital, Subscription, ICU Units, Staff
+    %%   - ANONYMIZATION LAYER: Active Tracking (TT) → Registry Archive (AID)
+    %%   - CLINICAL DATA: Linked to tracking via TT during active phase
+    %%
+    %% Privacy Model:
+    %%   - TT (Tracking Token): Temporary, destroyed on archive
+    %%   - AID (Archive ID): Generated at archive time, permanent
+    %%   - Registry ID: Human-readable (NSN-XXXX-XXXX-XXXX) for Decursus Morbi
+    %%   - No cloud mapping: Re-identification only possible at hospital
+    %%
+    %% ============================================================================
+
+    %% ============================================================================
+    %% SECTION 1: HOSPITAL INFRASTRUCTURE
+    %% ============================================================================
+
     HOSPITAL ||--o| ICU_SUBSCRIPTION : has
     HOSPITAL ||--o{ ICU_UNIT : operates
+    HOSPITAL ||--o{ PHYSICIAN : employs
     HOSPITAL {
         int hospital_id PK
         string name
         string city
+        string region
         string address
         string phone
         string type
@@ -32,13 +55,115 @@ erDiagram
         boolean is_active
     }
 
+    PHYSICIAN {
+        int physician_id PK
+        int hospital_id FK
+        string first_name
+        string last_name
+        string specialty
+        string license_number UK
+        string email
+        string app_role
+    }
+
+    ADMIN_USER {
+        int admin_id PK
+        string username UK
+        string password_hash
+        string first_name
+        string last_name
+        string role
+        string email UK
+        boolean is_active
+    }
+
+    %% ============================================================================
+    %% SECTION 2: ANONYMIZATION LAYER (Privacy-Preserving)
+    %% ============================================================================
+    %%
+    %% Flow: ACTIVE_TRACKING --[archive]--> REGISTRY_ARCHIVE
+    %%       TT destroyed ←──────────────→ AID + Registry ID created
+    %%
+    %% ============================================================================
+
+    HOSPITAL ||--o{ ACTIVE_TRACKING : creates
+    ICU_SUBSCRIPTION ||--o{ ACTIVE_TRACKING : allows
+    ACTIVE_TRACKING ||--o| REGISTRY_ARCHIVE : archives_to
+
+    ACTIVE_TRACKING {
+        uuid tt PK "Tracking Token (temporary)"
+        int hospital_id FK
+        int subscription_id FK
+        datetime created_at
+        datetime updated_at
+        datetime expires_at
+        datetime closed_at
+        string status "active|closed"
+        string shock_type "cardiogenic|septic|..."
+        string scai_stage "A|B|C|D|E"
+        int age_decade "Anonymized: 0-110"
+        char sex "M|F|U"
+        jsonb admission_data "Validated, no PII"
+        jsonb hemodynamics "Time-series array"
+        jsonb laboratory "Time-series array"
+        jsonb ventilation "Time-series array"
+        jsonb medications "Array"
+        jsonb procedures "Array"
+        jsonb notes "Array"
+        string outcome_status "Required before archive"
+        jsonb outcome_data
+    }
+
+    REGISTRY_ARCHIVE {
+        uuid aid PK "Archive ID (generated at archive)"
+        string registry_id UK "NSN-XXXX-XXXX-XXXX"
+        datetime archived_at
+        int archive_version
+        string hospital_region "Anonymized region only"
+        string shock_type
+        string scai_stage_admission
+        string scai_stage_worst
+        int age_decade
+        char sex
+        jsonb aggregated_data "No timestamps, summarized"
+        string outcome_status
+        int length_of_stay_days
+        int icu_days
+        jsonb cohort_flags "Research categorization"
+        string data_checksum "SHA-256 integrity"
+    }
+
+    ANON_AUDIT_LOG {
+        bigint id PK
+        datetime event_time
+        string event_type "created|accessed|archived|purged"
+        string actor_role
+        uuid actor_id
+        uuid aid "Only after archive, NEVER TT"
+        string registry_id
+        inet ip_address
+        string user_agent
+        jsonb metadata
+    }
+
+    %% ============================================================================
+    %% SECTION 3: LEGACY PATIENT MODEL (For Reference)
+    %% ============================================================================
+    %%
+    %% NOTE: This section shows the original patient-centric model.
+    %% In the new privacy architecture, ACTIVE_TRACKING replaces PATIENT
+    %% for the cloud database. Patient identity exists ONLY at hospital.
+    %%
+    %% ============================================================================
+
     PATIENT ||--o{ ADMISSION : has
     PATIENT {
-        int patient_id PK
-        string patient_code UK
-        string qr_code UK
-        string encrypted_identity
-        date date_of_birth
+        int patient_id PK "Hospital-only"
+        string patient_code UK "Legacy pseudonym"
+        string qr_code UK "Legacy QR"
+        string encrypted_identity "AES-256 - REMOVED in new model"
+        string national_id_hash "SHA-256 - REMOVED in new model"
+        date date_of_birth "Hospital-only"
         int age
         string gender
         decimal weight_kg
@@ -46,6 +171,53 @@ erDiagram
         decimal bsa
         decimal bmi
     }
+
+    ICU_SUBSCRIPTION ||--o{ ADMISSION : allows
+    PHYSICIAN ||--o{ ADMISSION : submits
+    ADMIN_USER ||--o{ ADMISSION : approves
+    ADMISSION ||--|| OUTCOME : results_in
+    ADMISSION {
+        int admission_id PK "Hospital-only"
+        int patient_id FK
+        int subscription_id FK
+        int icu_id FK
+        int physician_id FK
+        int approved_by FK
+        string case_number UK
+        uuid tracking_token "Links to cloud TT"
+        string registry_id "After archive: NSN-XXXX"
+        date date_of_admission
+        date date_of_shock_onset
+        int point_of_referral
+        string referral_hospital
+        datetime submission_date
+        datetime admission_date
+        string status
+        string bed_number
+    }
+
+    OUTCOME {
+        int outcome_id PK
+        int admission_id FK
+        boolean died_in_icu
+        int transfer_type
+        date icu_discharge_date
+        boolean died_in_hospital
+        date inhospital_death_date
+        int discharge_destination
+        date hospital_discharge_date
+        int length_of_stay_icu
+        int length_of_stay_hospital
+    }
+
+    %% ============================================================================
+    %% SECTION 4: CLINICAL DATA (Linked to ACTIVE_TRACKING via TT)
+    %% ============================================================================
+    %%
+    %% In cloud: stored as JSONB arrays in ACTIVE_TRACKING
+    %% At hospital: can be stored in normalized tables linked to ADMISSION
+    %%
+    %% ============================================================================
 
     ADMISSION ||--|| MEDICAL_HISTORY : has
     MEDICAL_HISTORY {
@@ -388,65 +560,9 @@ erDiagram
         text notes
     }
 
-    ICU_SUBSCRIPTION ||--o{ ADMISSION : allows
-    ADMISSION ||--|| OUTCOME : results_in
-    ADMISSION {
-        int admission_id PK
-        int patient_id FK
-        int subscription_id FK
-        int icu_id FK
-        int physician_id FK
-        int approved_by FK
-        string case_number UK
-        date date_of_admission
-        date date_of_shock_onset
-        int point_of_referral
-        string referral_hospital
-        datetime submission_date
-        datetime admission_date
-        string status
-        string bed_number
-    }
-
-    OUTCOME {
-        int outcome_id PK
-        int admission_id FK
-        boolean died_in_icu
-        int transfer_type
-        date icu_discharge_date
-        boolean died_in_hospital
-        date inhospital_death_date
-        int discharge_destination
-        date hospital_discharge_date
-        int length_of_stay_icu
-        int length_of_stay_hospital
-    }
-
-    PHYSICIAN ||--o{ ADMISSION : submits
-    PHYSICIAN {
-        int physician_id PK
-        int hospital_id FK
-        string first_name
-        string last_name
-        string specialty
-        string license_number UK
-        string email
-    }
-
-    ADMIN_USER ||--o{ ADMISSION : approves
-    ADMIN_USER {
-        int admin_id PK
-        string username UK
-        string password_hash
-        string first_name
-        string last_name
-        string role
-        string email UK
-        boolean can_view_identity
-        boolean is_active
-    }
-
-    HOSPITAL ||--o{ PHYSICIAN : employs
+    %% ============================================================================
+    %% SECTION 5: SYSTEM AUDIT (Legacy)
+    %% ============================================================================
 
     AUDIT_LOG {
         int log_id PK

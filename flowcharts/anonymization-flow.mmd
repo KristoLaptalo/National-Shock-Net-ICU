@@ -1,0 +1,115 @@
+flowchart TB
+    subgraph HOSPITAL["HOSPITAL (On-Premises)"]
+        direction TB
+        H1[/"Patient Arrives<br/>Ivan Horvat, OIB: 12345678901"/]
+        H2[("Hospital Database<br/>patient_id: 42<br/>Full identity stored")]
+        H3["Doctor Creates Case"]
+        H4["Hospital Stores TT<br/>in local admission record"]
+        H5["Daily Data Entry<br/>via TT"]
+        H6["Discharge & Outcome"]
+        H7["Doctor Archives Case"]
+        H8["Receives Registry ID:<br/>NSN-A7B2-C9D4-E1F8"]
+        H9[/"Decursus Morbi PDF<br/>Patient: Ivan Horvat<br/>Registry ID: NSN-A7B2-C9D4-E1F8"/]
+        H10[("Hospital Archive<br/>Links patient ↔ Registry ID")]
+    end
+
+    subgraph CLOUD["CLOUD (Supabase)"]
+        direction TB
+
+        subgraph ACTIVE["ACTIVE_TRACKING (Phase B)"]
+            C1["create_tracking()"]
+            C2[("TT: abc-123-xyz<br/>shock_type: cardiogenic<br/>scai_stage: C<br/>age_decade: 60<br/>sex: M<br/>NO NAME, NO OIB")]
+            C3["update_tracking()<br/>Hemodynamics, Labs, etc."]
+            C4["set_outcome()"]
+        end
+
+        subgraph ARCHIVE_OP["ARCHIVE OPERATION"]
+            C5["close_and_archive_tracking()"]
+            C6{{"POINT OF NO RETURN"}}
+            C7["Generate AID: xyz-789-..."]
+            C8["Generate Registry ID:<br/>NSN-A7B2-C9D4-E1F8"]
+            C9["Aggregate Data<br/>(remove timestamps)"]
+            C10["DELETE from active_tracking<br/>TT DESTROYED"]
+        end
+
+        subgraph ARCHIVED["REGISTRY_ARCHIVE (Phase C)"]
+            C11[("AID: xyz-789-...<br/>Registry ID: NSN-A7B2-C9D4-E1F8<br/>Aggregated data only<br/>NO TT, NO NAME, NO OIB")]
+        end
+
+        subgraph RESEARCH["RESEARCH ACCESS"]
+            C12["research_archive_safe VIEW"]
+            C13["k-anonymity enforced<br/>cohort < 5 suppressed"]
+        end
+
+        subgraph AUDIT["ANON_AUDIT_LOG"]
+            C14[("event: tracking_archived<br/>aid: xyz-789-...<br/>registry_id: NSN-A7B2...<br/>NO TT LOGGED")]
+        end
+    end
+
+    subgraph RESEARCHER["RESEARCHER"]
+        R1["Query research_archive_safe"]
+        R2["Receives anonymized<br/>aggregated data"]
+        R3["Cannot re-identify:<br/>No TT, No name,<br/>No hospital link"]
+    end
+
+    %% Hospital Flow
+    H1 --> H2
+    H2 --> H3
+    H3 -->|"Sends anonymized data"| C1
+    C1 -->|"Returns TT"| H4
+    H4 --> H5
+    H5 -->|"Uses TT"| C3
+    H5 --> H6
+    H6 -->|"Uses TT"| C4
+    H6 --> H7
+    H7 -->|"Calls archive"| C5
+
+    %% Cloud Flow - Active
+    C1 --> C2
+    C3 --> C2
+    C4 --> C2
+
+    %% Archive Operation
+    C5 --> C6
+    C6 --> C7
+    C6 --> C8
+    C6 --> C9
+    C6 --> C10
+    C7 --> C11
+    C8 --> C11
+    C9 --> C11
+    C10 -.->|"TT destroyed"| C2
+
+    %% Return to Hospital
+    C8 -->|"Returns Registry ID"| H8
+    H8 --> H9
+    H9 --> H10
+
+    %% Audit
+    C6 --> C14
+
+    %% Research Flow
+    C11 --> C12
+    C12 --> C13
+    C13 --> R1
+    R1 --> R2
+    R2 --> R3
+
+    %% Styling
+    style H1 fill:#E3F2FD,stroke:#1976D2
+    style H2 fill:#FFCDD2,stroke:#D32F2F
+    style H9 fill:#C8E6C9,stroke:#388E3C
+    style H10 fill:#C8E6C9,stroke:#388E3C
+
+    style C2 fill:#FFF3E0,stroke:#F57C00
+    style C6 fill:#E1BEE7,stroke:#7B1FA2,stroke-width:3px
+    style C10 fill:#FFCDD2,stroke:#D32F2F
+    style C11 fill:#C8E6C9,stroke:#388E3C
+
+    style R3 fill:#C8E6C9,stroke:#388E3C
+
+    classDef cloud fill:#E3F2FD,stroke:#1976D2
+    classDef hospital fill:#FFF3E0,stroke:#F57C00
+    classDef danger fill:#FFCDD2,stroke:#D32F2F
+    classDef safe fill:#C8E6C9,stroke:#388E3C
+    classDef anon fill:#E1BEE7,stroke:#7B1FA2

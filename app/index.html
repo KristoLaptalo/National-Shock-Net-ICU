@@ -1174,19 +1174,19 @@
                     </div>
 
                     <!-- Archive Notice -->
-                    <div class="bg-shock-green-light border border-shock-green rounded-lg p-4 flex items-center space-x-4">
-                        <svg class="w-8 h-8 text-shock-green flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>
+                    <div class="bg-shock-purple-light border border-shock-purple rounded-lg p-4 flex items-center space-x-4">
+                        <svg class="w-8 h-8 text-shock-purple flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>
                         <div>
-                            <p class="font-semibold text-shock-green">Case will be archived</p>
-                            <p class="text-sm text-gray-600">Anonymized data will be available for research and analytics</p>
+                            <p class="font-semibold text-shock-purple">Case will be archived to National Registry</p>
+                            <p class="text-sm text-gray-600">You will receive a Registry ID to copy into the patient's Decursus Morbi</p>
                         </div>
                     </div>
 
                     <!-- Submit -->
                     <div class="flex justify-end space-x-4">
                         <button type="button" class="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">Cancel</button>
-                        <button type="submit" onclick="alert('Patient GAMMA-5R1T4W discharged and archived!\nOutcome: Survived\nLOS: 3 days'); showTab('patients'); return false;" class="px-6 py-3 bg-shock-green text-white rounded-lg hover:bg-green-700 font-semibold">
-                            Complete Discharge
+                        <button type="button" onclick="showArchiveModal()" class="px-6 py-3 bg-shock-purple text-white rounded-lg hover:bg-purple-700 font-semibold">
+                            Complete Discharge & Archive
                         </button>
                     </div>
                 </form>
@@ -1277,6 +1277,113 @@
             </div>
 
         </div>
+
+        <!-- ========================================== -->
+        <!-- ARCHIVE SUCCESS MODAL -->
+        <!-- ========================================== -->
+        <div id="archive-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+            <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-lg w-full mx-4 transform transition-all">
+                <!-- Success Icon -->
+                <div class="text-center mb-6">
+                    <div class="w-20 h-20 bg-shock-green-light rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-12 h-12 text-shock-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                    </div>
+                    <h2 class="text-2xl font-bold text-gray-800">Case Archived Successfully</h2>
+                    <p class="text-gray-500 mt-2">Patient discharged and data submitted to National Registry</p>
+                </div>
+
+                <!-- Registry ID Display -->
+                <div class="bg-shock-purple-light rounded-xl p-6 mb-6">
+                    <p class="text-sm text-shock-purple font-medium mb-2 text-center">Registry ID for Decursus Morbi</p>
+                    <div class="flex items-center justify-center gap-3">
+                        <code id="registry-id-display" class="text-3xl font-mono font-bold text-shock-purple tracking-wider">
+                            NSN-A7B2-C9D4-E1F8
+                        </code>
+                        <button onclick="copyRegistryId()" class="p-2 hover:bg-purple-200 rounded-lg transition" title="Copy to clipboard">
+                            <svg id="copy-icon" class="w-6 h-6 text-shock-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                            </svg>
+                            <svg id="check-icon" class="w-6 h-6 text-shock-green hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <p id="copy-feedback" class="text-center text-sm text-shock-green mt-2 opacity-0 transition-opacity">Copied to clipboard!</p>
+                </div>
+
+                <!-- Archive Details -->
+                <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <span class="text-gray-500">Patient Code</span>
+                            <p class="font-mono font-semibold text-gray-800">GAMMA-5R1T4W</p>
+                        </div>
+                        <div>
+                            <span class="text-gray-500">Archived At</span>
+                            <p class="font-semibold text-gray-800" id="archive-timestamp">Jan 14, 2026 14:32</p>
+                        </div>
+                        <div>
+                            <span class="text-gray-500">Outcome</span>
+                            <p class="font-semibold text-shock-green">Survived - Transfer to Ward</p>
+                        </div>
+                        <div>
+                            <span class="text-gray-500">Length of Stay</span>
+                            <p class="font-semibold text-gray-800">3 days</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Important Notice -->
+                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+                    <div class="flex items-start space-x-3">
+                        <svg class="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                        </svg>
+                        <div>
+                            <p class="font-semibold text-yellow-800">Important: Copy this Registry ID</p>
+                            <p class="text-sm text-yellow-700 mt-1">
+                                This ID is the <strong>only link</strong> between the anonymous registry data and the patient's identity.
+                                Paste it into the patient's <strong>Decursus Morbi</strong> (discharge summary) before closing this dialog.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <button onclick="copyRegistryId()" class="flex-1 px-6 py-3 bg-shock-purple text-white rounded-lg hover:bg-purple-700 font-semibold flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                        </svg>
+                        Copy Registry ID
+                    </button>
+                    <button onclick="printRegistryLabel()" class="flex-1 px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-semibold flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+                        </svg>
+                        Print Label
+                    </button>
+                </div>
+
+                <div class="mt-4">
+                    <button onclick="closeArchiveModal()" class="w-full px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium">
+                        Done - Return to Patients
+                    </button>
+                </div>
+
+                <!-- Tracking Token Destroyed Notice -->
+                <div class="mt-4 pt-4 border-t border-gray-200 text-center">
+                    <p class="text-xs text-gray-400 flex items-center justify-center gap-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                        </svg>
+                        Tracking token destroyed. Cloud data is now fully anonymized.
+                    </p>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -1328,6 +1435,153 @@
                 event.target.closest('.outcome-btn').classList.add('border-shock-red', 'bg-shock-red-light');
             }
         }
+
+        // Archive Modal Functions
+        function generateRegistryId() {
+            // Generate NSN-XXXX-XXXX-XXXX format
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let id = 'NSN-';
+            for (let i = 0; i < 3; i++) {
+                for (let j = 0; j < 4; j++) {
+                    id += chars.charAt(Math.floor(Math.random() * chars.length));
+                }
+                if (i < 2) id += '-';
+            }
+            return id;
+        }
+
+        function showArchiveModal() {
+            // Generate new Registry ID
+            const registryId = generateRegistryId();
+            document.getElementById('registry-id-display').textContent = registryId;
+
+            // Set current timestamp
+            const now = new Date();
+            const options = { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' };
+            document.getElementById('archive-timestamp').textContent = now.toLocaleDateString('en-US', options);
+
+            // Reset copy feedback
+            document.getElementById('copy-feedback').classList.add('opacity-0');
+            document.getElementById('copy-icon').classList.remove('hidden');
+            document.getElementById('check-icon').classList.add('hidden');
+
+            // Show modal with animation
+            const modal = document.getElementById('archive-modal');
+            modal.classList.remove('hidden');
+            modal.querySelector('.bg-white').classList.add('scale-100');
+        }
+
+        function closeArchiveModal() {
+            document.getElementById('archive-modal').classList.add('hidden');
+            showTab('patients');
+        }
+
+        function copyRegistryId() {
+            const registryId = document.getElementById('registry-id-display').textContent;
+            navigator.clipboard.writeText(registryId).then(() => {
+                // Show success feedback
+                document.getElementById('copy-feedback').classList.remove('opacity-0');
+                document.getElementById('copy-icon').classList.add('hidden');
+                document.getElementById('check-icon').classList.remove('hidden');
+
+                // Reset after 3 seconds
+                setTimeout(() => {
+                    document.getElementById('copy-feedback').classList.add('opacity-0');
+                    document.getElementById('copy-icon').classList.remove('hidden');
+                    document.getElementById('check-icon').classList.add('hidden');
+                }, 3000);
+            }).catch(err => {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = registryId;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+
+                document.getElementById('copy-feedback').classList.remove('opacity-0');
+            });
+        }
+
+        function printRegistryLabel() {
+            const registryId = document.getElementById('registry-id-display').textContent;
+            const timestamp = document.getElementById('archive-timestamp').textContent;
+
+            const printWindow = window.open('', '_blank', 'width=400,height=300');
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Registry Label</title>
+                    <style>
+                        body {
+                            font-family: 'Courier New', monospace;
+                            padding: 20px;
+                            text-align: center;
+                        }
+                        .label {
+                            border: 2px solid #7B1FA2;
+                            padding: 20px;
+                            max-width: 300px;
+                            margin: 0 auto;
+                        }
+                        .title {
+                            font-size: 10px;
+                            color: #666;
+                            margin-bottom: 10px;
+                        }
+                        .registry-id {
+                            font-size: 24px;
+                            font-weight: bold;
+                            color: #7B1FA2;
+                            letter-spacing: 2px;
+                            margin: 15px 0;
+                        }
+                        .timestamp {
+                            font-size: 10px;
+                            color: #999;
+                        }
+                        .patient-code {
+                            font-size: 12px;
+                            color: #333;
+                            margin-top: 10px;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="label">
+                        <div class="title">NATIONAL SHOCK REGISTRY</div>
+                        <div class="registry-id">${registryId}</div>
+                        <div class="patient-code">GAMMA-5R1T4W</div>
+                        <div class="timestamp">Archived: ${timestamp}</div>
+                    </div>
+                    <script>
+                        window.onload = function() {
+                            window.print();
+                        };
+                    <\/script>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+        }
+
+        // Close modal on escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const modal = document.getElementById('archive-modal');
+                if (!modal.classList.contains('hidden')) {
+                    closeArchiveModal();
+                }
+            }
+        });
+
+        // Close modal on backdrop click
+        document.getElementById('archive-modal')?.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeArchiveModal();
+            }
+        });
     </script>
 
 </body>

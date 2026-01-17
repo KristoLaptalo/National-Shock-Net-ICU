@@ -139,6 +139,13 @@
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                         <span>Audit Log</span>
                     </button>
+
+                    <div class="my-4 border-t border-gray-700"></div>
+
+                    <button onclick="showTab('archive')" class="sidebar-item w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-800 transition" data-tab="archive">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>
+                        <span>Archive Lookup</span>
+                    </button>
                 </nav>
 
                 <div class="absolute bottom-0 w-64 p-4 border-t border-gray-700">
@@ -909,8 +916,331 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- ========================================== -->
+                    <!-- TAB: ARCHIVE LOOKUP -->
+                    <!-- ========================================== -->
+                    <div id="tab-archive" class="tab-content hidden">
+                        <div class="mb-6">
+                            <h3 class="text-lg font-semibold text-gray-800">Registry Archive Lookup</h3>
+                            <p class="text-sm text-gray-500">Search anonymized patient records by Registry ID</p>
+                        </div>
+
+                        <!-- Search Box -->
+                        <div class="bg-white rounded-xl shadow p-6 mb-6">
+                            <div class="flex items-center space-x-4">
+                                <div class="flex-1">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Enter Registry ID</label>
+                                    <div class="flex space-x-3">
+                                        <input type="text" id="archive-search-input" placeholder="NSN-XXXX-XXXX-XXXX" class="flex-1 px-4 py-3 border-2 border-gray-300 rounded-lg font-mono text-lg tracking-wider focus:border-shock-purple focus:ring-2 focus:ring-shock-purple-light uppercase" maxlength="19">
+                                        <button onclick="searchArchive()" class="px-6 py-3 bg-shock-purple text-white rounded-lg hover:bg-purple-700 font-semibold flex items-center space-x-2">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                                            <span>Search</span>
+                                        </button>
+                                    </div>
+                                    <p class="text-xs text-gray-400 mt-2">Format: NSN-XXXX-XXXX-XXXX (e.g., NSN-A7B2-C9D4-E1F8)</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Privacy Notice -->
+                        <div class="bg-shock-purple-light border border-shock-purple rounded-lg p-4 mb-6">
+                            <div class="flex items-start space-x-3">
+                                <svg class="w-6 h-6 text-shock-purple flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                                </svg>
+                                <div>
+                                    <p class="font-semibold text-shock-purple">Privacy-Preserving Archive</p>
+                                    <p class="text-sm text-gray-700 mt-1">
+                                        Archive records contain <strong>no patient identifiers</strong>. Registry IDs cannot be reverse-engineered to identify patients.
+                                        Re-identification is only possible at the originating hospital via their medical records.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Archive Statistics -->
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                            <div class="bg-white rounded-xl shadow p-4">
+                                <p class="text-gray-500 text-sm">Total Archived</p>
+                                <p class="text-2xl font-bold text-shock-purple">1,847</p>
+                            </div>
+                            <div class="bg-white rounded-xl shadow p-4">
+                                <p class="text-gray-500 text-sm">This Month</p>
+                                <p class="text-2xl font-bold text-gray-700">142</p>
+                            </div>
+                            <div class="bg-white rounded-xl shadow p-4">
+                                <p class="text-gray-500 text-sm">Survived</p>
+                                <p class="text-2xl font-bold text-shock-green">81.8%</p>
+                            </div>
+                            <div class="bg-white rounded-xl shadow p-4">
+                                <p class="text-gray-500 text-sm">Avg LOS</p>
+                                <p class="text-2xl font-bold text-gray-700">4.2 days</p>
+                            </div>
+                        </div>
+
+                        <!-- Recent Archive Activity -->
+                        <div class="bg-white rounded-xl shadow">
+                            <div class="px-6 py-4 border-b">
+                                <h4 class="font-semibold text-gray-800">Recent Archive Entries</h4>
+                            </div>
+                            <div class="divide-y">
+                                <div class="p-4 flex items-center justify-between hover:bg-gray-50 cursor-pointer" onclick="showArchiveResult('NSN-A7B2-C9D4-E1F8')">
+                                    <div class="flex items-center space-x-4">
+                                        <div class="w-10 h-10 bg-shock-purple-light rounded-full flex items-center justify-center">
+                                            <svg class="w-5 h-5 text-shock-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>
+                                        </div>
+                                        <div>
+                                            <p class="font-mono text-shock-purple font-semibold">NSN-A7B2-C9D4-E1F8</p>
+                                            <p class="text-xs text-gray-500">Cardiogenic Shock | SCAI C | Survived</p>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-sm text-gray-600">Jan 14, 2026</p>
+                                        <p class="text-xs text-gray-400">3 days LOS</p>
+                                    </div>
+                                </div>
+                                <div class="p-4 flex items-center justify-between hover:bg-gray-50 cursor-pointer" onclick="showArchiveResult('NSN-K9M3-P2X7-Q4R1')">
+                                    <div class="flex items-center space-x-4">
+                                        <div class="w-10 h-10 bg-shock-purple-light rounded-full flex items-center justify-center">
+                                            <svg class="w-5 h-5 text-shock-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>
+                                        </div>
+                                        <div>
+                                            <p class="font-mono text-shock-purple font-semibold">NSN-K9M3-P2X7-Q4R1</p>
+                                            <p class="text-xs text-gray-500">Septic Shock | SCAI D | Survived</p>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-sm text-gray-600">Jan 13, 2026</p>
+                                        <p class="text-xs text-gray-400">5 days LOS</p>
+                                    </div>
+                                </div>
+                                <div class="p-4 flex items-center justify-between hover:bg-gray-50 cursor-pointer" onclick="showArchiveResult('NSN-T5V8-W1Y3-Z6N2')">
+                                    <div class="flex items-center space-x-4">
+                                        <div class="w-10 h-10 bg-shock-purple-light rounded-full flex items-center justify-center">
+                                            <svg class="w-5 h-5 text-shock-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>
+                                        </div>
+                                        <div>
+                                            <p class="font-mono text-shock-purple font-semibold">NSN-T5V8-W1Y3-Z6N2</p>
+                                            <p class="text-xs text-gray-500">Mixed Shock | SCAI E | Deceased</p>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-sm text-gray-600">Jan 12, 2026</p>
+                                        <p class="text-xs text-gray-400">2 days LOS</p>
+                                    </div>
+                                </div>
+                                <div class="p-4 flex items-center justify-between hover:bg-gray-50 cursor-pointer" onclick="showArchiveResult('NSN-B4D6-F8H2-J5L9')">
+                                    <div class="flex items-center space-x-4">
+                                        <div class="w-10 h-10 bg-shock-purple-light rounded-full flex items-center justify-center">
+                                            <svg class="w-5 h-5 text-shock-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>
+                                        </div>
+                                        <div>
+                                            <p class="font-mono text-shock-purple font-semibold">NSN-B4D6-F8H2-J5L9</p>
+                                            <p class="text-xs text-gray-500">Hypovolemic Shock | SCAI B | Survived</p>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-sm text-gray-600">Jan 11, 2026</p>
+                                        <p class="text-xs text-gray-400">1 day LOS</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </main>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODAL: ARCHIVE RESULT -->
+    <!-- ========================================== -->
+    <div id="archive-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-auto m-4">
+            <!-- Header -->
+            <div class="px-6 py-4 border-b bg-shock-purple-light flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <svg class="w-8 h-8 text-shock-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
+                    </svg>
+                    <div>
+                        <p class="text-sm text-shock-purple">Registry Archive Record</p>
+                        <p id="modal-registry-id" class="text-2xl font-mono font-bold text-shock-purple">NSN-A7B2-C9D4-E1F8</p>
+                    </div>
+                </div>
+                <button onclick="closeArchiveModal()" class="text-gray-500 hover:text-gray-700">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+
+            <div class="p-6">
+                <!-- Archive Metadata -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-gray-50 rounded-lg p-3 text-center">
+                        <p class="text-xs text-gray-500">Archived</p>
+                        <p id="modal-archived-at" class="font-semibold text-gray-800">Jan 14, 2026</p>
+                    </div>
+                    <div class="bg-gray-50 rounded-lg p-3 text-center">
+                        <p class="text-xs text-gray-500">Region</p>
+                        <p id="modal-region" class="font-semibold text-gray-800">North</p>
+                    </div>
+                    <div class="bg-gray-50 rounded-lg p-3 text-center">
+                        <p class="text-xs text-gray-500">Length of Stay</p>
+                        <p id="modal-los" class="font-semibold text-gray-800">3 days</p>
+                    </div>
+                    <div class="bg-gray-50 rounded-lg p-3 text-center">
+                        <p class="text-xs text-gray-500">Data Integrity</p>
+                        <p class="font-semibold text-shock-green flex items-center justify-center">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            Verified
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Clinical Summary -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div>
+                        <h4 class="font-semibold text-gray-800 mb-3">Demographics (Anonymized)</h4>
+                        <div class="bg-gray-50 rounded-lg p-4 space-y-2">
+                            <div class="flex justify-between">
+                                <span class="text-gray-500">Age Decade:</span>
+                                <span id="modal-age" class="font-medium">60s</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-500">Sex:</span>
+                                <span id="modal-sex" class="font-medium">Male</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-500">Cohort Size:</span>
+                                <span id="modal-cohort" class="font-medium text-shock-green">47 patients</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-gray-800 mb-3">Shock Classification</h4>
+                        <div class="bg-gray-50 rounded-lg p-4 space-y-2">
+                            <div class="flex justify-between">
+                                <span class="text-gray-500">Shock Type:</span>
+                                <span id="modal-shock-type" class="font-medium">Cardiogenic</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-500">SCAI at Admission:</span>
+                                <span id="modal-scai-admission" class="font-medium px-2 py-0.5 bg-orange-100 text-orange-700 rounded">C</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-500">SCAI Worst:</span>
+                                <span id="modal-scai-worst" class="font-medium px-2 py-0.5 bg-red-100 text-red-700 rounded">D</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Aggregated Hemodynamics -->
+                <h4 class="font-semibold text-gray-800 mb-3">Aggregated Hemodynamics</h4>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+                    <div class="bg-shock-purple-light rounded-lg p-3 text-center">
+                        <p class="text-xs text-gray-600">MAP Range</p>
+                        <p id="modal-map" class="text-lg font-bold text-shock-purple">52 - 78 mmHg</p>
+                        <p class="text-xs text-gray-500">avg: 65</p>
+                    </div>
+                    <div class="bg-shock-purple-light rounded-lg p-3 text-center">
+                        <p class="text-xs text-gray-600">Lactate Range</p>
+                        <p id="modal-lactate" class="text-lg font-bold text-shock-purple">2.1 - 6.8 mmol/L</p>
+                        <p class="text-xs text-gray-500">avg: 4.2</p>
+                    </div>
+                    <div class="bg-shock-purple-light rounded-lg p-3 text-center">
+                        <p class="text-xs text-gray-600">HR Range</p>
+                        <p id="modal-hr" class="text-lg font-bold text-shock-purple">88 - 124 bpm</p>
+                        <p class="text-xs text-gray-500">avg: 102</p>
+                    </div>
+                    <div class="bg-shock-purple-light rounded-lg p-3 text-center">
+                        <p class="text-xs text-gray-600">Readings</p>
+                        <p id="modal-readings" class="text-lg font-bold text-shock-purple">24</p>
+                        <p class="text-xs text-gray-500">data points</p>
+                    </div>
+                </div>
+
+                <!-- Data Counts -->
+                <h4 class="font-semibold text-gray-800 mb-3">Data Summary</h4>
+                <div class="grid grid-cols-3 md:grid-cols-6 gap-3 mb-6">
+                    <div class="bg-gray-100 rounded-lg p-3 text-center">
+                        <p class="text-2xl font-bold text-gray-700">12</p>
+                        <p class="text-xs text-gray-500">Lab Tests</p>
+                    </div>
+                    <div class="bg-gray-100 rounded-lg p-3 text-center">
+                        <p class="text-2xl font-bold text-gray-700">8</p>
+                        <p class="text-xs text-gray-500">Vent Readings</p>
+                    </div>
+                    <div class="bg-gray-100 rounded-lg p-3 text-center">
+                        <p class="text-2xl font-bold text-gray-700">5</p>
+                        <p class="text-xs text-gray-500">Medications</p>
+                    </div>
+                    <div class="bg-gray-100 rounded-lg p-3 text-center">
+                        <p class="text-2xl font-bold text-gray-700">2</p>
+                        <p class="text-xs text-gray-500">Procedures</p>
+                    </div>
+                    <div class="bg-gray-100 rounded-lg p-3 text-center">
+                        <p class="text-2xl font-bold text-gray-700">3</p>
+                        <p class="text-xs text-gray-500">Echo Studies</p>
+                    </div>
+                    <div class="bg-gray-100 rounded-lg p-3 text-center">
+                        <p class="text-2xl font-bold text-gray-700">6</p>
+                        <p class="text-xs text-gray-500">Blood Gas</p>
+                    </div>
+                </div>
+
+                <!-- Outcome -->
+                <h4 class="font-semibold text-gray-800 mb-3">Outcome</h4>
+                <div id="modal-outcome-section" class="bg-shock-green-light border border-shock-green rounded-lg p-4 mb-6">
+                    <div class="flex items-center space-x-3">
+                        <svg class="w-8 h-8 text-shock-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <div>
+                            <p id="modal-outcome" class="font-semibold text-shock-green text-lg">Survived - Transferred to Ward</p>
+                            <p class="text-sm text-gray-600">ICU Days: 3 | Hospital Days: 7</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Privacy Notice -->
+                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+                    <div class="flex items-start space-x-3">
+                        <svg class="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <div>
+                            <p class="font-semibold text-yellow-800">Anonymized Record</p>
+                            <p class="text-sm text-yellow-700">
+                                This record contains no patient identifiers. Timestamps have been removed and data has been aggregated.
+                                Re-identification requires access to the originating hospital's medical records and the Registry ID.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex justify-between items-center border-t pt-4">
+                    <div class="text-xs text-gray-400">
+                        <span class="flex items-center">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                            </svg>
+                            Checksum: <span id="modal-checksum" class="font-mono">a7b2c9d4...</span>
+                        </span>
+                    </div>
+                    <div class="flex space-x-3">
+                        <button onclick="exportArchiveRecord()" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 flex items-center space-x-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                            <span>Export JSON</span>
+                        </button>
+                        <button onclick="closeArchiveModal()" class="px-4 py-2 bg-shock-purple text-white rounded-lg hover:bg-purple-700">
+                            Close
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -1050,7 +1380,8 @@
                 'cases': ['Case Review', 'Patient submission approvals'],
                 'hospitals': ['Hospitals', 'Network hospital monitoring'],
                 'reports': ['Reports', 'Analytics and statistics'],
-                'audit': ['Audit Log', 'System activity history']
+                'audit': ['Audit Log', 'System activity history'],
+                'archive': ['Archive Lookup', 'Search anonymized registry records']
             };
             if (titles[tabId]) {
                 document.getElementById('page-title').textContent = titles[tabId][0];
@@ -1080,6 +1411,273 @@
         function showHospitalModal() {
             alert("Hospital Details:\nCity General Hospital\nActive Patients: 12\nMonthly Usage: 30/50\nSubscription: Premium (Active)");
         }
+
+        // ========================================
+        // ARCHIVE LOOKUP FUNCTIONS
+        // ========================================
+
+        // Sample archive data (in production, this would come from the database)
+        const archiveData = {
+            'NSN-A7B2-C9D4-E1F8': {
+                archivedAt: 'Jan 14, 2026 14:32',
+                region: 'North',
+                los: '3 days',
+                icuDays: 3,
+                hospitalDays: 7,
+                agDecade: '60s',
+                sex: 'Male',
+                cohortSize: 47,
+                shockType: 'Cardiogenic',
+                scaiAdmission: 'C',
+                scaiWorst: 'D',
+                mapRange: '52 - 78 mmHg',
+                mapAvg: 65,
+                lactateRange: '2.1 - 6.8 mmol/L',
+                lactateAvg: 4.2,
+                hrRange: '88 - 124 bpm',
+                hrAvg: 102,
+                readings: 24,
+                outcome: 'Survived - Transferred to Ward',
+                outcomeType: 'survived',
+                checksum: 'a7b2c9d4e1f8'
+            },
+            'NSN-K9M3-P2X7-Q4R1': {
+                archivedAt: 'Jan 13, 2026 09:15',
+                region: 'Central',
+                los: '5 days',
+                icuDays: 5,
+                hospitalDays: 12,
+                agDecade: '50s',
+                sex: 'Female',
+                cohortSize: 38,
+                shockType: 'Septic',
+                scaiAdmission: 'D',
+                scaiWorst: 'D',
+                mapRange: '48 - 72 mmHg',
+                mapAvg: 58,
+                lactateRange: '3.2 - 8.4 mmol/L',
+                lactateAvg: 5.6,
+                hrRange: '95 - 142 bpm',
+                hrAvg: 118,
+                readings: 42,
+                outcome: 'Survived - Discharged Home',
+                outcomeType: 'survived',
+                checksum: 'k9m3p2x7q4r1'
+            },
+            'NSN-T5V8-W1Y3-Z6N2': {
+                archivedAt: 'Jan 12, 2026 22:48',
+                region: 'South',
+                los: '2 days',
+                icuDays: 2,
+                hospitalDays: 2,
+                agDecade: '70s',
+                sex: 'Male',
+                cohortSize: 23,
+                shockType: 'Mixed',
+                scaiAdmission: 'E',
+                scaiWorst: 'E',
+                mapRange: '38 - 55 mmHg',
+                mapAvg: 45,
+                lactateRange: '8.2 - 14.6 mmol/L',
+                lactateAvg: 11.2,
+                hrRange: '110 - 165 bpm',
+                hrAvg: 138,
+                readings: 18,
+                outcome: 'Deceased - Multi-organ Failure',
+                outcomeType: 'deceased',
+                checksum: 't5v8w1y3z6n2'
+            },
+            'NSN-B4D6-F8H2-J5L9': {
+                archivedAt: 'Jan 11, 2026 16:20',
+                region: 'East',
+                los: '1 day',
+                icuDays: 1,
+                hospitalDays: 3,
+                agDecade: '40s',
+                sex: 'Female',
+                cohortSize: 52,
+                shockType: 'Hypovolemic',
+                scaiAdmission: 'B',
+                scaiWorst: 'C',
+                mapRange: '58 - 85 mmHg',
+                mapAvg: 72,
+                lactateRange: '2.0 - 3.8 mmol/L',
+                lactateAvg: 2.8,
+                hrRange: '78 - 98 bpm',
+                hrAvg: 86,
+                readings: 12,
+                outcome: 'Survived - Transferred to Ward',
+                outcomeType: 'survived',
+                checksum: 'b4d6f8h2j5l9'
+            }
+        };
+
+        // Format Registry ID input
+        document.getElementById('archive-search-input')?.addEventListener('input', function(e) {
+            let value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+
+            // Add NSN- prefix if not present
+            if (value.length > 0 && !value.startsWith('NSN')) {
+                value = 'NSN' + value;
+            }
+
+            // Format with dashes
+            let formatted = '';
+            if (value.length > 0) formatted = value.substring(0, 3);
+            if (value.length > 3) formatted += '-' + value.substring(3, 7);
+            if (value.length > 7) formatted += '-' + value.substring(7, 11);
+            if (value.length > 11) formatted += '-' + value.substring(11, 15);
+
+            e.target.value = formatted;
+        });
+
+        // Search archive
+        function searchArchive() {
+            const input = document.getElementById('archive-search-input');
+            const registryId = input.value.trim().toUpperCase();
+
+            if (!registryId) {
+                alert('Please enter a Registry ID');
+                return;
+            }
+
+            if (!/^NSN-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(registryId)) {
+                alert('Invalid Registry ID format.\nExpected: NSN-XXXX-XXXX-XXXX');
+                return;
+            }
+
+            showArchiveResult(registryId);
+        }
+
+        // Show archive result modal
+        function showArchiveResult(registryId) {
+            const data = archiveData[registryId];
+
+            if (!data) {
+                alert('Registry ID not found: ' + registryId + '\n\nThis ID may not exist or may have been entered incorrectly.');
+                return;
+            }
+
+            // Populate modal fields
+            document.getElementById('modal-registry-id').textContent = registryId;
+            document.getElementById('modal-archived-at').textContent = data.archivedAt;
+            document.getElementById('modal-region').textContent = data.region;
+            document.getElementById('modal-los').textContent = data.los;
+            document.getElementById('modal-age').textContent = data.agDecade;
+            document.getElementById('modal-sex').textContent = data.sex;
+            document.getElementById('modal-cohort').textContent = data.cohortSize + ' patients';
+            document.getElementById('modal-shock-type').textContent = data.shockType;
+            document.getElementById('modal-scai-admission').textContent = data.scaiAdmission;
+            document.getElementById('modal-scai-worst').textContent = data.scaiWorst;
+            document.getElementById('modal-map').textContent = data.mapRange;
+            document.getElementById('modal-lactate').textContent = data.lactateRange;
+            document.getElementById('modal-hr').textContent = data.hrRange;
+            document.getElementById('modal-readings').textContent = data.readings;
+            document.getElementById('modal-outcome').textContent = data.outcome;
+            document.getElementById('modal-checksum').textContent = data.checksum + '...';
+
+            // Update SCAI badge colors
+            const scaiAdmEl = document.getElementById('modal-scai-admission');
+            const scaiWorstEl = document.getElementById('modal-scai-worst');
+
+            scaiAdmEl.className = 'font-medium px-2 py-0.5 rounded ' + getScaiBadgeClass(data.scaiAdmission);
+            scaiWorstEl.className = 'font-medium px-2 py-0.5 rounded ' + getScaiBadgeClass(data.scaiWorst);
+
+            // Update outcome section styling
+            const outcomeSection = document.getElementById('modal-outcome-section');
+            const outcomeIcon = outcomeSection.querySelector('svg');
+
+            if (data.outcomeType === 'deceased') {
+                outcomeSection.className = 'bg-shock-red-light border border-shock-red rounded-lg p-4 mb-6';
+                outcomeIcon.className = 'w-8 h-8 text-shock-red';
+                document.getElementById('modal-outcome').className = 'font-semibold text-shock-red text-lg';
+            } else {
+                outcomeSection.className = 'bg-shock-green-light border border-shock-green rounded-lg p-4 mb-6';
+                outcomeIcon.className = 'w-8 h-8 text-shock-green';
+                document.getElementById('modal-outcome').className = 'font-semibold text-shock-green text-lg';
+            }
+
+            // Show modal
+            document.getElementById('archive-modal').classList.remove('hidden');
+        }
+
+        function getScaiBadgeClass(stage) {
+            const classes = {
+                'A': 'bg-green-100 text-green-700',
+                'B': 'bg-yellow-100 text-yellow-700',
+                'C': 'bg-orange-100 text-orange-700',
+                'D': 'bg-red-100 text-red-700',
+                'E': 'bg-red-200 text-red-800'
+            };
+            return classes[stage] || 'bg-gray-100 text-gray-700';
+        }
+
+        function closeArchiveModal() {
+            document.getElementById('archive-modal').classList.add('hidden');
+        }
+
+        function exportArchiveRecord() {
+            const registryId = document.getElementById('modal-registry-id').textContent;
+            const data = archiveData[registryId];
+
+            if (!data) return;
+
+            const exportData = {
+                registry_id: registryId,
+                archived_at: data.archivedAt,
+                demographics: {
+                    age_decade: data.agDecade,
+                    sex: data.sex,
+                    cohort_size: data.cohortSize
+                },
+                classification: {
+                    shock_type: data.shockType,
+                    scai_admission: data.scaiAdmission,
+                    scai_worst: data.scaiWorst
+                },
+                hemodynamics: {
+                    map: { range: data.mapRange, avg: data.mapAvg },
+                    lactate: { range: data.lactateRange, avg: data.lactateAvg },
+                    heart_rate: { range: data.hrRange, avg: data.hrAvg },
+                    total_readings: data.readings
+                },
+                outcome: {
+                    status: data.outcome,
+                    los_days: parseInt(data.los),
+                    icu_days: data.icuDays,
+                    hospital_days: data.hospitalDays
+                },
+                integrity: {
+                    checksum: data.checksum,
+                    exported_at: new Date().toISOString()
+                }
+            };
+
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = registryId + '.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Close modals on escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeArchiveModal();
+                closeCaseModal();
+            }
+        });
+
+        // Search on Enter key
+        document.getElementById('archive-search-input')?.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                searchArchive();
+            }
+        });
     </script>
 
 </body>

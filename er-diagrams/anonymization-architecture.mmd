@@ -1,0 +1,137 @@
+erDiagram
+    %% ============================================================================
+    %% ANONYMIZATION ARCHITECTURE - PRIVACY-PRESERVING REGISTRY
+    %% ============================================================================
+    %%
+    %% This diagram focuses on the anonymization layer showing:
+    %%   - Data flow from active tracking to archive
+    %%   - Separation between cloud and hospital data
+    %%   - Role-based access control
+    %%
+    %% Key Privacy Properties:
+    %%   1. TT (Tracking Token) is TEMPORARY - destroyed on archive
+    %%   2. AID (Archive ID) generated ONLY at archive time
+    %%   3. Registry ID (NSN-XXXX-XXXX-XXXX) for Decursus Morbi
+    %%   4. NO mapping table in cloud - re-identification at hospital only
+    %%   5. k-anonymity enforced for research queries
+    %%
+    %% ============================================================================
+
+    %% ============================================================================
+    %% CLOUD DATABASE (Supabase)
+    %% ============================================================================
+
+    ACTIVE_TRACKING ||--o| REGISTRY_ARCHIVE : "archives_to (TT destroyed)"
+
+    ACTIVE_TRACKING {
+        uuid tt PK "TEMPORARY - Tracking Token"
+        uuid hospital_id FK "Reference only"
+        timestamp created_at
+        timestamp updated_at
+        timestamp expires_at "Auto-purge after expiry"
+        timestamp closed_at
+        enum status "active | closed"
+        enum shock_type "cardiogenic | septic | ..."
+        enum scai_stage "A | B | C | D | E"
+        smallint age_decade "Anonymized: decade only"
+        char sex "M | F | U"
+        jsonb admission_data "PII-validated"
+        jsonb hemodynamics "Time-series (destroyed on archive)"
+        jsonb laboratory "Time-series (destroyed on archive)"
+        jsonb ventilation "Time-series (destroyed on archive)"
+        jsonb medications "Array"
+        jsonb procedures "Array"
+        jsonb notes "PII-validated"
+        text outcome_status "Required before archive"
+        jsonb outcome_data
+    }
+
+    REGISTRY_ARCHIVE {
+        uuid aid PK "Generated AT archive time"
+        text registry_id UK "NSN-XXXX-XXXX-XXXX"
+        timestamp archived_at "Point of no return"
+        smallint archive_version
+        text hospital_region "Anonymized: region only"
+        enum shock_type
+        enum scai_stage_admission
+        enum scai_stage_worst
+        smallint age_decade
+        char sex
+        jsonb aggregated_data "Summarized, no timestamps"
+        text outcome_status
+        smallint length_of_stay_days
+        smallint icu_days
+        jsonb cohort_flags "Research categorization"
+        text data_checksum "SHA-256 for integrity"
+    }
+
+    ANON_AUDIT_LOG {
+        bigserial id PK
+        timestamp event_time
+        enum event_type "created | updated | accessed | archived | purged"
+        text actor_role "hospital_admin | clinician | researcher"
+        uuid actor_id
+        uuid aid "ONLY after archive - NEVER TT"
+        text registry_id
+        inet ip_address
+        text user_agent
+        jsonb metadata "No PII, no TT"
+    }
+
+    %% ============================================================================
+    %% HOSPITAL DATABASE (On-Premises / Local)
+    %% ============================================================================
+
+    HOSPITAL_PATIENT {
+        int patient_id PK "Hospital internal ID"
+        text full_name "Real identity - NEVER in cloud"
+        text national_id "OIB/JMBG - NEVER in cloud"
+        date date_of_birth "Full DOB - NEVER in cloud"
+        text medical_record_number "MRN - NEVER in cloud"
+        text contact_info "Phone/Email - NEVER in cloud"
+    }
+
+    HOSPITAL_ADMISSION {
+        int admission_id PK "Hospital internal ID"
+        int patient_id FK
+        uuid tracking_token "Links to cloud TT (temporary)"
+        text registry_id "NSN-XXXX - copied from cloud after archive"
+        timestamp cloud_archived_at "When archived to registry"
+        text decursus_morbi_path "Path to discharge PDF"
+    }
+
+    HOSPITAL_PATIENT ||--o{ HOSPITAL_ADMISSION : has
+
+    %% ============================================================================
+    %% ACCESS CONTROL (RLS Policies)
+    %% ============================================================================
+
+    ROLE_PERMISSIONS {
+        text role PK "hospital_admin | clinician | researcher"
+        boolean can_create_tracking "hospital_admin, clinician"
+        boolean can_read_tracking_by_tt "hospital_admin, clinician (RPC only)"
+        boolean can_update_tracking "hospital_admin, clinician"
+        boolean can_archive "hospital_admin only"
+        boolean can_read_archive "hospital_admin, researcher, clinician"
+        boolean can_read_research_view "researcher (k-anonymity enforced)"
+        boolean can_read_audit_log "hospital_admin only"
+    }
+
+    %% ============================================================================
+    %% RESEARCH VIEW (k-Anonymity Protected)
+    %% ============================================================================
+
+    RESEARCH_ARCHIVE_SAFE {
+        uuid aid PK
+        text registry_id
+        timestamp archived_at
+        enum shock_type
+        enum scai_stage_admission
+        smallint age_decade_safe "NULL if cohort < 5"
+        char sex_safe "NULL if cohort < 5"
+        jsonb aggregated_data_safe "Suppressed if cohort < 5"
+        text outcome_status
+        smallint length_of_stay_days
+        boolean is_fully_releasable "true if cohort >= 5"
+        int cohort_size "Count of similar records"
+    }

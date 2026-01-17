@@ -1,0 +1,90 @@
+@import "tailwindcss";
+
+/* Custom theme - Shock Net colors */
+@theme {
+  /* Primary Shock Net colors (from existing HTML mockups) */
+  --color-shock-purple: #7B1FA2;
+  --color-shock-purple-light: #E1BEE7;
+  --color-shock-green: #2E7D32;
+  --color-shock-green-light: #C8E6C9;
+  --color-shock-orange: #E65100;
+  --color-shock-orange-light: #FFF3E0;
+  --color-shock-blue: #1565C0;
+  --color-shock-blue-light: #E3F2FD;
+  --color-shock-red: #C62828;
+  --color-shock-red-light: #FFCDD2;
+  --color-shock-teal: #00695C;
+  --color-shock-teal-light: #B2DFDB;
+
+  /* Admin Portal colors */
+  --color-admin-blue: #0D47A1;
+  --color-admin-blue-light: #BBDEFB;
+  --color-shock-cyan: #00838F;
+  --color-shock-cyan-light: #B2EBF2;
+}
+
+/* Custom base styles */
+@layer base {
+  body {
+    @apply bg-gray-100 min-h-screen text-gray-900 antialiased;
+  }
+}
+
+/* Custom component classes for status badges */
+@layer components {
+  /* Status badges - matching existing mockup styles */
+  .status-pending {
+    @apply bg-shock-blue-light text-shock-blue;
+  }
+  .status-approved {
+    @apply bg-shock-green-light text-shock-green;
+  }
+  .status-rejected {
+    @apply bg-shock-red-light text-shock-red;
+  }
+  .status-admitted {
+    @apply bg-shock-teal-light text-shock-teal;
+  }
+  .status-discharged {
+    @apply bg-gray-200 text-gray-600;
+  }
+  .status-review {
+    @apply bg-admin-blue-light text-shock-blue;
+  }
+
+  /* Anonymization badge */
+  .anonymization-badge {
+    @apply bg-shock-purple-light text-shock-purple font-mono;
+  }
+
+  /* Tier badges */
+  .tier-basic {
+    @apply bg-gray-200 text-gray-600;
+  }
+  .tier-standard {
+    @apply bg-admin-blue-light text-shock-blue;
+  }
+  .tier-premium {
+    @apply bg-shock-green-light text-shock-green;
+  }
+  .tier-unlimited {
+    @apply bg-shock-purple-light text-shock-purple;
+  }
+
+  /* SCAI Stage badges */
+  .scai-a {
+    @apply bg-green-100 text-green-700;
+  }
+  .scai-b {
+    @apply bg-yellow-100 text-yellow-700;
+  }
+  .scai-c {
+    @apply bg-orange-100 text-orange-700;
+  }
+  .scai-d {
+    @apply bg-red-100 text-red-700;
+  }
+  .scai-e {
+    @apply bg-red-200 text-red-800;
+  }
+}
