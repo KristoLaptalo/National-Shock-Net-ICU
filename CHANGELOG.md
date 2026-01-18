@@ -2,6 +2,24 @@
 
 All notable changes to the National Shock Net ICU project will be documented in this file.
 
+## [0.13.2] - 2026-01-18
+
+### Added - Demo Login Credentials
+
+#### Authentication Bypass for Testing
+- Added demo credentials that work without Supabase backend
+- Credentials displayed on login pages for easy access
+
+#### Demo Users (`src/features/auth/AuthContext.tsx`)
+| Portal | Email | Password | Role |
+|--------|-------|----------|------|
+| Hospital | `demo@hospital.com` | `demo123` | clinician |
+| Admin | `admin@shocknet.com` | `admin123` | hospital_admin |
+
+#### Login Page Updates
+- Added credential hint boxes to HospitalLoginPage and AdminLoginPage
+- Styled with portal-appropriate colors
+
 ## [0.13.1] - 2026-01-16
 
 ### Fixed - Build Errors & Type Compatibility
