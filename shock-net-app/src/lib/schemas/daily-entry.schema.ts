@@ -106,8 +106,8 @@ export const dailyEntrySchema = z.object({
   // Ventilator (single or multiple)
   ventilator: ventilatorSchema.optional(),
 
-  // Labs (typically once daily)
-  laboratory: laboratorySchema.optional(),
+  // Labs (multiple entries per day)
+  laboratory: z.array(laboratorySchema).optional(),
 
   // Echo (if performed)
   echo: echoSchema.optional(),
