@@ -40,7 +40,7 @@ export const PATIENT_TABS: PatientTab[] = [
     id: 'discharge',
     label: 'Discharge',
     path: 'discharge',
-    allowedStatuses: ['discharged'],
+    allowedStatuses: ['admitted', 'discharged', 'archived'],
   },
 ];
 
