@@ -2,6 +2,37 @@
 
 All notable changes to the National Shock Net ICU project will be documented in this file.
 
+## [0.14.0] - 2026-02-02
+
+### Changed - Fast Mobile Input for Daily Entry
+
+Refactored Blood Gas and Labs tabs in `DailyEntryTab.tsx` for faster ICU bedside data entry on mobile devices.
+
+#### Blood Gas Tab - Multiple Entries
+- **Dynamic array support** using `useFieldArray` from react-hook-form
+- **Compact card layout** with 2x3 grid on mobile, 3x2 on larger screens
+- **Entry management**: Add, Copy Last, Remove buttons
+- **Progress indicator**: Shows "2/3" with status badge (OK/more needed)
+- **Quick-add buttons**: Preset times (06:00, 12:00, 18:00, 22:00)
+- **Lactate highlighted** with orange background (key shock marker)
+- **Core 6 fields per entry**: pH, pCO2, Lactate, HCO3, BE, pO2
+
+#### Labs Tab - Compact Layout
+- **Critical values grid**: 2 columns mobile, 3 tablet, 6 desktop
+- **Priority fields**: Hgb, Plt, Cr, K+, Trop, BNP (always visible)
+- **Collapsible sections**: CBC, Chemistry, Liver, Coagulation via `<details>`
+- **Removed oversized inputs**: Dropped `size="lg"` to prevent overlap
+
+#### Mobile Optimizations
+- Responsive grids: `grid-cols-2 sm:grid-cols-3` pattern
+- Tighter gaps: `gap-2` on mobile, `gap-3` on larger screens
+- Shorter button labels: "Copy", "+ ABG", "✕"
+- Flex-wrap on action bars to prevent overflow
+
+#### No New Components
+- Reused existing: Input, Button, Card, CardTitle, Select, Badge
+- Array management via react-hook-form's `useFieldArray`
+
 ## [0.13.2] - 2026-01-18
 
 ### Added - Demo Login Credentials

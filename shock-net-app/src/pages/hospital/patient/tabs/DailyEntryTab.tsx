@@ -5,7 +5,7 @@
  */
 
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import { Card, CardContent, CardTitle } from '../../../../components/ui/Card';
@@ -61,6 +61,8 @@ export function DailyEntryTab() {
     handleSubmit,
     watch,
     setValue,
+    control,
+    getValues,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(dailyEntrySchema),
@@ -68,6 +70,7 @@ export function DailyEntryTab() {
       dayNumber,
       currentScaiStage: patient?.scaiStage || 'C',
       entryDate: new Date().toISOString().split('T')[0],
+      bloodGas: [{ type: 'arterial' as const, timestamp: new Date().toTimeString().slice(0, 5) }],
       mcs: {
         isActive: true,
         insertionDate: new Date().toISOString().split('T')[0],
@@ -87,6 +90,25 @@ export function DailyEntryTab() {
       },
     },
   });
+
+  const { fields: bloodGasFields, append: appendBloodGas, remove: removeBloodGas } = useFieldArray({
+    control,
+    name: 'bloodGas',
+  });
+
+  const addBloodGasEntry = () => {
+    appendBloodGas({ type: 'arterial' as const, timestamp: new Date().toTimeString().slice(0, 5) });
+  };
+
+  const copyLastBloodGas = () => {
+    const currentEntries = getValues('bloodGas') || [];
+    if (currentEntries.length > 0) {
+      const last = currentEntries[currentEntries.length - 1];
+      appendBloodGas({ ...last, timestamp: new Date().toTimeString().slice(0, 5) });
+    } else {
+      addBloodGasEntry();
+    }
+  };
 
   // MCS device type watchers
   const selectedDevice = watch('mcs.deviceType') as MCSDeviceType | undefined;
@@ -224,24 +246,128 @@ export function DailyEntryTab() {
         )}
 
         {activeTab === 'bloodgas' && (
-          <FormSection title="Blood Gas Analysis" description="Arterial or venous blood gas">
-            <FormRow columns={3}>
-              <Select label="Sample Type" options={BLOOD_GAS_TYPE_OPTIONS} {...register('bloodGas.0.type')} />
-              <Input label="Time" type="time" {...register('bloodGas.0.timestamp')} />
-              <div />
-            </FormRow>
-            <FormRow columns={4}>
-              <Input label="pH" type="number" step="0.01" placeholder="7.35-7.45" {...register('bloodGas.0.ph', { valueAsNumber: true })} />
-              <Input label="pCO2" type="number" placeholder="mmHg" {...register('bloodGas.0.pco2', { valueAsNumber: true })} />
-              <Input label="pO2" type="number" placeholder="mmHg" {...register('bloodGas.0.po2', { valueAsNumber: true })} />
-              <Input label="HCO3" type="number" step="0.1" placeholder="mEq/L" {...register('bloodGas.0.hco3', { valueAsNumber: true })} />
-            </FormRow>
-            <FormRow columns={3}>
-              <Input label="Base Excess" type="number" step="0.1" placeholder="mEq/L" {...register('bloodGas.0.baseExcess', { valueAsNumber: true })} />
-              <Input label="Lactate" type="number" step="0.1" placeholder="mmol/L" {...register('bloodGas.0.lactate', { valueAsNumber: true })} />
-              <Input label="SaO2" type="number" placeholder="%" {...register('bloodGas.0.sao2', { valueAsNumber: true })} />
-            </FormRow>
-          </FormSection>
+          <div className="space-y-4">
+            {/* Entry count indicator */}
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-600">{bloodGasFields.length}/3</span>
+                {bloodGasFields.length < 3 && (
+                  <span className="text-xs text-shock-orange bg-shock-orange-light px-2 py-0.5 rounded-full">
+                    {3 - bloodGasFields.length} more
+                  </span>
+                )}
+                {bloodGasFields.length >= 3 && (
+                  <span className="text-xs text-shock-green bg-shock-green-light px-2 py-0.5 rounded-full">
+                    OK
+                  </span>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <Button type="button" variant="secondary" size="sm" onClick={copyLastBloodGas}>
+                  Copy
+                </Button>
+                <Button type="button" variant="primary" size="sm" onClick={addBloodGasEntry}>
+                  + ABG
+                </Button>
+              </div>
+            </div>
+
+            {/* Blood gas entries */}
+            {bloodGasFields.map((field, index) => (
+              <Card key={field.id} padding="sm" className="relative">
+                <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-semibold text-shock-blue">#{index + 1}</span>
+                    <Select
+                      options={BLOOD_GAS_TYPE_OPTIONS}
+                      className="w-24 text-sm"
+                      {...register(`bloodGas.${index}.type`)}
+                    />
+                    <Input
+                      type="time"
+                      size="sm"
+                      className="w-[5.5rem]"
+                      {...register(`bloodGas.${index}.timestamp`)}
+                    />
+                  </div>
+                  {bloodGasFields.length > 1 && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeBloodGas(index)}
+                      className="text-gray-400 hover:text-shock-red px-2"
+                    >
+                      ✕
+                    </Button>
+                  )}
+                </div>
+                {/* Compact 2x3 grid on mobile, 3x2 on larger screens */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  <Input
+                    label="pH"
+                    type="number"
+                    step="0.01"
+                    placeholder="7.40"
+                    {...register(`bloodGas.${index}.ph`, { valueAsNumber: true })}
+                  />
+                  <Input
+                    label="pCO2"
+                    type="number"
+                    placeholder="40"
+                    {...register(`bloodGas.${index}.pco2`, { valueAsNumber: true })}
+                  />
+                  <Input
+                    label="Lactate"
+                    type="number"
+                    step="0.1"
+                    placeholder="1.0"
+                    className="bg-shock-orange-light border-shock-orange"
+                    {...register(`bloodGas.${index}.lactate`, { valueAsNumber: true })}
+                  />
+                  <Input
+                    label="HCO3"
+                    type="number"
+                    step="0.1"
+                    placeholder="24"
+                    {...register(`bloodGas.${index}.hco3`, { valueAsNumber: true })}
+                  />
+                  <Input
+                    label="BE"
+                    type="number"
+                    step="0.1"
+                    placeholder="0"
+                    {...register(`bloodGas.${index}.baseExcess`, { valueAsNumber: true })}
+                  />
+                  <Input
+                    label="pO2"
+                    type="number"
+                    placeholder="80"
+                    {...register(`bloodGas.${index}.po2`, { valueAsNumber: true })}
+                  />
+                </div>
+              </Card>
+            ))}
+
+            {/* Quick add buttons for common times */}
+            {bloodGasFields.length < 6 && (
+              <div className="flex items-center gap-2 pt-2">
+                <span className="text-xs text-gray-500">Quick add:</span>
+                {['06:00', '12:00', '18:00', '22:00'].map((time) => (
+                  <Button
+                    key={time}
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => appendBloodGas({ type: 'arterial' as const, timestamp: time })}
+                    className="text-xs"
+                  >
+                    {time}
+                  </Button>
+                ))}
+              </div>
+            )}
+          </div>
         )}
 
         {activeTab === 'ventilator' && (
@@ -261,29 +387,61 @@ export function DailyEntryTab() {
         )}
 
         {activeTab === 'labs' && (
-          <div className="space-y-6">
-            <FormSection title="CBC">
-              <FormRow columns={4}>
-                <Input label="Hemoglobin" type="number" step="0.1" placeholder="g/dL" {...register('laboratory.hemoglobin', { valueAsNumber: true })} />
-                <Input label="Hematocrit" type="number" step="0.1" placeholder="%" {...register('laboratory.hematocrit', { valueAsNumber: true })} />
-                <Input label="WBC" type="number" step="0.1" placeholder="x10^3" {...register('laboratory.wbc', { valueAsNumber: true })} />
-                <Input label="Platelets" type="number" placeholder="x10^3" {...register('laboratory.platelets', { valueAsNumber: true })} />
-              </FormRow>
-            </FormSection>
-            <FormSection title="Chemistry">
-              <FormRow columns={4}>
-                <Input label="Sodium" type="number" placeholder="mEq/L" {...register('laboratory.sodium', { valueAsNumber: true })} />
-                <Input label="Potassium" type="number" step="0.1" placeholder="mEq/L" {...register('laboratory.potassium', { valueAsNumber: true })} />
-                <Input label="Creatinine" type="number" step="0.01" placeholder="mg/dL" {...register('laboratory.creatinine', { valueAsNumber: true })} />
-                <Input label="Glucose" type="number" placeholder="mg/dL" {...register('laboratory.glucose', { valueAsNumber: true })} />
-              </FormRow>
-            </FormSection>
-            <FormSection title="Cardiac Markers">
-              <FormRow columns={2}>
-                <Input label="Troponin" type="number" step="0.001" placeholder="ng/mL" {...register('laboratory.troponin', { valueAsNumber: true })} />
-                <Input label="BNP/NT-proBNP" type="number" placeholder="pg/mL" {...register('laboratory.bnp', { valueAsNumber: true })} />
-              </FormRow>
-            </FormSection>
+          <div className="space-y-4">
+            {/* Critical values - always visible */}
+            <Card padding="sm">
+              <CardTitle className="text-sm mb-3">Critical Values</CardTitle>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3">
+                <Input label="Hgb" type="number" step="0.1" placeholder="g/dL" {...register('laboratory.hemoglobin', { valueAsNumber: true })} />
+                <Input label="Plt" type="number" placeholder="K" {...register('laboratory.platelets', { valueAsNumber: true })} />
+                <Input label="Cr" type="number" step="0.01" placeholder="mg/dL" {...register('laboratory.creatinine', { valueAsNumber: true })} />
+                <Input label="K+" type="number" step="0.1" placeholder="mEq/L" {...register('laboratory.potassium', { valueAsNumber: true })} />
+                <Input label="Trop" type="number" step="0.001" placeholder="ng/mL" {...register('laboratory.troponin', { valueAsNumber: true })} />
+                <Input label="BNP" type="number" placeholder="pg/mL" {...register('laboratory.bnp', { valueAsNumber: true })} />
+              </div>
+            </Card>
+
+            {/* Expandable additional labs */}
+            <details className="group">
+              <summary className="cursor-pointer text-sm text-gray-600 hover:text-gray-800 flex items-center gap-2 py-2">
+                <span className="group-open:rotate-90 transition-transform">▶</span>
+                Additional Labs (CBC, Chemistry, Coagulation)
+              </summary>
+              <div className="space-y-4 pt-2">
+                <Card padding="sm" variant="bordered">
+                  <CardTitle className="text-sm mb-3">CBC</CardTitle>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Input label="Hct" type="number" step="0.1" placeholder="%" {...register('laboratory.hematocrit', { valueAsNumber: true })} />
+                    <Input label="WBC" type="number" step="0.1" placeholder="K" {...register('laboratory.wbc', { valueAsNumber: true })} />
+                  </div>
+                </Card>
+                <Card padding="sm" variant="bordered">
+                  <CardTitle className="text-sm mb-3">Chemistry</CardTitle>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    <Input label="Na+" type="number" placeholder="mEq/L" {...register('laboratory.sodium', { valueAsNumber: true })} />
+                    <Input label="Glucose" type="number" placeholder="mg/dL" {...register('laboratory.glucose', { valueAsNumber: true })} />
+                    <Input label="BUN" type="number" placeholder="mg/dL" {...register('laboratory.bun', { valueAsNumber: true })} />
+                    <Input label="Albumin" type="number" step="0.1" placeholder="g/dL" {...register('laboratory.albumin', { valueAsNumber: true })} />
+                  </div>
+                </Card>
+                <Card padding="sm" variant="bordered">
+                  <CardTitle className="text-sm mb-3">Liver</CardTitle>
+                  <div className="grid grid-cols-3 gap-2">
+                    <Input label="AST" type="number" placeholder="U/L" {...register('laboratory.ast', { valueAsNumber: true })} />
+                    <Input label="ALT" type="number" placeholder="U/L" {...register('laboratory.alt', { valueAsNumber: true })} />
+                    <Input label="Bili" type="number" step="0.1" placeholder="mg/dL" {...register('laboratory.bilirubin', { valueAsNumber: true })} />
+                  </div>
+                </Card>
+                <Card padding="sm" variant="bordered">
+                  <CardTitle className="text-sm mb-3">Coagulation</CardTitle>
+                  <div className="grid grid-cols-3 gap-2">
+                    <Input label="PT" type="number" step="0.1" placeholder="sec" {...register('laboratory.pt', { valueAsNumber: true })} />
+                    <Input label="INR" type="number" step="0.1" placeholder="" {...register('laboratory.inr', { valueAsNumber: true })} />
+                    <Input label="PTT" type="number" placeholder="sec" {...register('laboratory.ptt', { valueAsNumber: true })} />
+                  </div>
+                </Card>
+              </div>
+            </details>
           </div>
         )}
 
