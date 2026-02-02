@@ -131,7 +131,7 @@ export function DashboardPage() {
               </Button>
               <Button
                 variant="primary"
-                onClick={() => navigate(ROUTES.HOSPITAL.DAILY_ENTRY)}
+                onClick={() => navigate(ROUTES.HOSPITAL.PATIENTS)}
                 className="h-20 flex-col gap-2"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -151,7 +151,7 @@ export function DashboardPage() {
               </Button>
               <Button
                 variant="ghost"
-                onClick={() => navigate(ROUTES.HOSPITAL.DISCHARGE)}
+                onClick={() => navigate(ROUTES.HOSPITAL.PATIENTS)}
                 className="h-20 flex-col gap-2"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

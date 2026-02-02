@@ -3,7 +3,7 @@
  * Wraps all hospital portal pages with header and tab navigation
  */
 
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { AppShell } from '../../components/layout/AppShell';
 import { HospitalHeader } from '../../components/layout/Header';
 import { TabNavigation } from '../../components/layout/Navigation';
@@ -12,7 +12,11 @@ import { ROUTES } from '../../config/routes';
 
 export function HospitalLayout() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, logout } = useAuth();
+
+  // Check if we're on a patient detail page
+  const isPatientDetail = location.pathname.startsWith('/hospital/patient/');
 
   // Get user info from auth context with fallbacks
   const hospitalName = user?.hospitalId || 'Hospital';
@@ -35,7 +39,7 @@ export function HospitalLayout() {
           onLogout={handleLogout}
         />
       }
-      navigation={<TabNavigation />}
+      navigation={!isPatientDetail ? <TabNavigation /> : undefined}
     >
       <Outlet />
     </AppShell>

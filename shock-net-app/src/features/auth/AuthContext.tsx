@@ -44,6 +44,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const mapSupabaseUser = (supabaseUser: User): AuthUser => {
+    const metadata = supabaseUser.user_metadata || {};
+    return {
+      id: supabaseUser.id,
+      email: supabaseUser.email || '',
+      role: (metadata.role as AppRole) || 'clinician',
+      hospitalId: metadata.hospital_id,
+      name: metadata.name || supabaseUser.email?.split('@')[0] || 'User',
+    };
+  };
+
   useEffect(() => {
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -69,17 +80,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     return () => subscription.unsubscribe();
   }, []);
-
-  const mapSupabaseUser = (supabaseUser: User): AuthUser => {
-    const metadata = supabaseUser.user_metadata || {};
-    return {
-      id: supabaseUser.id,
-      email: supabaseUser.email || '',
-      role: (metadata.role as AppRole) || 'clinician',
-      hospitalId: metadata.hospital_id,
-      name: metadata.name || supabaseUser.email?.split('@')[0] || 'User',
-    };
-  };
 
   const login = async (credentials: LoginCredentials): Promise<{ error: AuthError | null }> => {
     setIsLoading(true);
@@ -140,6 +140,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth(): AuthContextType {
   const context = useContext(AuthContext);
   if (context === undefined) {

@@ -16,13 +16,18 @@ import { HospitalLayout } from './pages/hospital/HospitalLayout';
 import { DashboardPage as HospitalDashboard } from './pages/hospital/DashboardPage';
 import { PatientsPage } from './pages/hospital/PatientsPage';
 import { NewPatientPage } from './pages/hospital/NewPatientPage';
-import { MedicalHistoryPage } from './pages/hospital/MedicalHistoryPage';
-import { MedicationsPage } from './pages/hospital/MedicationsPage';
-import { AdmissionPage } from './pages/hospital/AdmissionPage';
-import { DailyEntryPage } from './pages/hospital/DailyEntryPage';
-import { MCSPage } from './pages/hospital/MCSPage';
-import { DischargePage } from './pages/hospital/DischargePage';
 import { SubscriptionPage } from './pages/hospital/SubscriptionPage';
+
+// Patient Detail Pages
+import {
+  PatientLayout,
+  PatientDetailPage,
+  HistoryTab,
+  MedicationsTab,
+  AdmissionTab,
+  DailyEntryTab,
+  DischargeTab,
+} from './pages/hospital/patient';
 
 // Admin Portal
 import { AdminLayout } from './pages/admin/AdminLayout';
@@ -50,18 +55,15 @@ function App() {
             <Route path="dashboard" element={<HospitalDashboard />} />
             <Route path="patients" element={<PatientsPage />} />
             <Route path="patients/new" element={<NewPatientPage />} />
-            <Route path="medical-history" element={<MedicalHistoryPage />} />
-            <Route path="medical-history/:tt" element={<MedicalHistoryPage />} />
-            <Route path="medications" element={<MedicationsPage />} />
-            <Route path="medications/:tt" element={<MedicationsPage />} />
-            <Route path="admission" element={<AdmissionPage />} />
-            <Route path="admission/:patientId" element={<AdmissionPage />} />
-            <Route path="daily-entry" element={<DailyEntryPage />} />
-            <Route path="daily-entry/:patientId" element={<DailyEntryPage />} />
-            <Route path="mcs" element={<MCSPage />} />
-            <Route path="mcs/:tt" element={<MCSPage />} />
-            <Route path="discharge" element={<DischargePage />} />
-            <Route path="discharge/:patientId" element={<DischargePage />} />
+            {/* Patient Detail Routes (nested with patient-specific layout) */}
+            <Route path="patient/:tt" element={<PatientLayout />}>
+              <Route index element={<PatientDetailPage />} />
+              <Route path="history" element={<HistoryTab />} />
+              <Route path="medications" element={<MedicationsTab />} />
+              <Route path="admission" element={<AdmissionTab />} />
+              <Route path="daily-entry" element={<DailyEntryTab />} />
+              <Route path="discharge" element={<DischargeTab />} />
+            </Route>
             <Route path="subscription" element={<SubscriptionPage />} />
           </Route>
 

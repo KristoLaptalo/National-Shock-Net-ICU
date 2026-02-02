@@ -1,20 +1,20 @@
 /**
- * Medical History Page
- * Comprehensive 28-field comorbidity assessment
+ * History Tab
+ * Medical history form within patient detail view
+ * Reuses MedicalHistoryPage form logic with context-based TT
  */
 
 import { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
-import { Card, CardContent } from '../../components/ui/Card';
-import { Button } from '../../components/ui/Button';
-import { Input } from '../../components/ui/Input';
-import { Select } from '../../components/ui/Select';
-import { Textarea } from '../../components/ui/Textarea';
-import { Checkbox } from '../../components/ui/Checkbox';
-import { FormSection, FormRow } from '../../components/ui/Form';
+import { Card, CardContent } from '../../../../components/ui/Card';
+import { Button } from '../../../../components/ui/Button';
+import { Input } from '../../../../components/ui/Input';
+import { Select } from '../../../../components/ui/Select';
+import { Textarea } from '../../../../components/ui/Textarea';
+import { Checkbox } from '../../../../components/ui/Checkbox';
+import { FormSection, FormRow } from '../../../../components/ui/Form';
 
 import {
   medicalHistorySchema,
@@ -36,10 +36,10 @@ import {
   NYHA_CLASS_OPTIONS,
   LIVER_ETIOLOGY_OPTIONS,
   PULMONARY_TYPE_OPTIONS,
-} from '../../lib/schemas';
-import type { MedicalHistoryFormData } from '../../lib/schemas';
-import { updateTracking } from '../../lib/supabase/rpc';
-import { ROUTES } from '../../config/routes';
+} from '../../../../lib/schemas';
+import type { MedicalHistoryFormData } from '../../../../lib/schemas';
+import { updateTracking } from '../../../../lib/supabase/rpc';
+import { usePatient } from '../../../../features/patient';
 
 // Collapsible section component
 function CollapsibleSection({
@@ -88,9 +88,8 @@ function CollapsibleSection({
   );
 }
 
-export function MedicalHistoryPage() {
-  const { tt } = useParams<{ tt: string }>();
-  const navigate = useNavigate();
+export function HistoryTab() {
+  const { tt } = usePatient();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
 
@@ -214,12 +213,9 @@ export function MedicalHistoryPage() {
             <p className="text-gray-600 mb-6">
               Comprehensive medical history has been recorded.
             </p>
-            <div className="flex gap-3 justify-center">
-              <Button onClick={() => navigate(ROUTES.HOSPITAL.PATIENTS)}>Back to Patients</Button>
-              <Button variant="secondary" onClick={() => navigate(ROUTES.HOSPITAL.MEDICATIONS.replace(':tt', tt || ''))}>
-                Continue to Medications
-              </Button>
-            </div>
+            <Button onClick={() => setSubmitSuccess(false)}>
+              Edit History
+            </Button>
           </CardContent>
         </Card>
       </div>
@@ -232,7 +228,7 @@ export function MedicalHistoryPage() {
         <div>
           <h2 className="text-2xl font-bold text-gray-800">Medical History</h2>
           <p className="text-gray-500 mt-1">
-            {tt ? `TT: ${tt.substring(0, 8)}...` : 'Comprehensive comorbidity assessment (28 fields)'}
+            Comprehensive comorbidity assessment (28 fields)
           </p>
         </div>
         <div className="flex items-center gap-2 bg-shock-teal-light px-4 py-2 rounded-lg">
@@ -358,7 +354,7 @@ export function MedicalHistoryPage() {
                 <FormRow className="mt-2">
                   <Checkbox label="On Anticoagulation" {...register('cardiovascular.afAnticoagulated')} />
                   <Input
-                    label="CHA₂DS₂-VASc Score"
+                    label="CHA2DS2-VASc Score"
                     type="number"
                     min={0}
                     max={9}
@@ -679,7 +675,7 @@ export function MedicalHistoryPage() {
               {organSystems?.chronicKidneyDisease !== '0' && (
                 <FormRow className="mt-2">
                   <Input
-                    label="Baseline Creatinine (µmol/L)"
+                    label="Baseline Creatinine (umol/L)"
                     type="number"
                     {...register('organSystems.baselineCreatinine', { valueAsNumber: true })}
                   />
@@ -729,7 +725,7 @@ export function MedicalHistoryPage() {
                     ]}
                     {...register('organSystems.goldStage')}
                   />
-                  <Checkbox label="On Home O₂" {...register('organSystems.onHomeO2')} />
+                  <Checkbox label="On Home O2" {...register('organSystems.onHomeO2')} />
                 </FormRow>
               )}
             </div>
@@ -1017,13 +1013,6 @@ export function MedicalHistoryPage() {
 
         {/* Form Actions */}
         <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={() => navigate(ROUTES.HOSPITAL.PATIENTS)}
-          >
-            Cancel
-          </Button>
           <Button type="submit" isLoading={isSubmitting}>
             Save Medical History
           </Button>
@@ -1033,4 +1022,4 @@ export function MedicalHistoryPage() {
   );
 }
 
-export default MedicalHistoryPage;
+export default HistoryTab;

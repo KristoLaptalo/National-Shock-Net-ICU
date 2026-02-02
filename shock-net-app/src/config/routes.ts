@@ -13,18 +13,14 @@ export const ROUTES = {
     DASHBOARD: '/hospital/dashboard',
     PATIENTS: '/hospital/patients',
     NEW_PATIENT: '/hospital/patients/new',
-    MEDICAL_HISTORY: '/hospital/medical-history',
-    MEDICAL_HISTORY_BY_TT: '/hospital/medical-history/:tt',
-    MEDICATIONS: '/hospital/medications',
-    MEDICATIONS_BY_TT: '/hospital/medications/:tt',
-    ADMISSION: '/hospital/admission',
-    ADMISSION_BY_ID: '/hospital/admission/:patientId',
-    DAILY_ENTRY: '/hospital/daily-entry',
-    DAILY_ENTRY_BY_ID: '/hospital/daily-entry/:patientId',
-    MCS: '/hospital/mcs',
-    MCS_BY_TT: '/hospital/mcs/:tt',
-    DISCHARGE: '/hospital/discharge',
-    DISCHARGE_BY_ID: '/hospital/discharge/:patientId',
+    // Patient detail routes (patient-centric workflow)
+    PATIENT_DETAIL: '/hospital/patient/:tt',
+    PATIENT_HISTORY: '/hospital/patient/:tt/history',
+    PATIENT_MEDICATIONS: '/hospital/patient/:tt/medications',
+    PATIENT_ADMISSION: '/hospital/patient/:tt/admission',
+    PATIENT_DAILY_ENTRY: '/hospital/patient/:tt/daily-entry',
+    PATIENT_MCS: '/hospital/patient/:tt/mcs',
+    PATIENT_DISCHARGE: '/hospital/patient/:tt/discharge',
     SUBSCRIPTION: '/hospital/subscription',
   },
 
@@ -45,16 +41,12 @@ export const ROUTES = {
 } as const;
 
 // Hospital portal tab configuration
+// Note: History, Medications, Admission, Daily Entry, MCS, and Discharge
+// are now accessed via patient detail view (/hospital/patient/:tt/*)
 export const HOSPITAL_TABS = [
   { id: 'dashboard', label: 'Dashboard', path: ROUTES.HOSPITAL.DASHBOARD },
   { id: 'patients', label: 'My Patients', path: ROUTES.HOSPITAL.PATIENTS },
   { id: 'new-patient', label: 'New Patient', path: ROUTES.HOSPITAL.NEW_PATIENT },
-  { id: 'medical-history', label: 'History', path: ROUTES.HOSPITAL.MEDICAL_HISTORY },
-  { id: 'medications', label: 'Medications', path: ROUTES.HOSPITAL.MEDICATIONS },
-  { id: 'admission', label: 'ICU Admission', path: ROUTES.HOSPITAL.ADMISSION },
-  { id: 'daily-entry', label: 'Daily Entry', path: ROUTES.HOSPITAL.DAILY_ENTRY },
-  { id: 'mcs', label: 'MCS', path: ROUTES.HOSPITAL.MCS },
-  { id: 'discharge', label: 'Discharge', path: ROUTES.HOSPITAL.DISCHARGE },
   { id: 'subscription', label: 'Subscription', path: ROUTES.HOSPITAL.SUBSCRIPTION },
 ] as const;
 

@@ -1,10 +1,11 @@
 /**
  * Daily Entry Form Validation Schemas
- * Comprehensive ICU daily monitoring data
+ * Comprehensive ICU daily monitoring data including MCS
  */
 
 import { z } from 'zod';
 import { scaiStageSchema } from './patient.schema';
+import { mcsEntrySchema } from './mcs.schema';
 
 // Hemodynamic Data Schema
 export const hemodynamicSchema = z.object({
@@ -128,6 +129,9 @@ export const dailyEntrySchema = z.object({
     deteriorating: z.boolean().optional(),
     comment: z.string().optional(),
   }).optional(),
+
+  // Mechanical Circulatory Support
+  mcs: mcsEntrySchema.partial().optional(),
 });
 
 export type DailyEntryFormData = z.infer<typeof dailyEntrySchema>;

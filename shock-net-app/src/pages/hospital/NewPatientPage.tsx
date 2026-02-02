@@ -152,21 +152,21 @@ export function NewPatientPage() {
                 <Button
                   variant="secondary"
                   size="sm"
-                  onClick={() => navigate(`${ROUTES.HOSPITAL.MEDICAL_HISTORY}/${generatedTT}`)}
+                  onClick={() => navigate(`/hospital/patient/${generatedTT}/history`)}
                 >
                   Complete Medical History
                 </Button>
                 <Button
                   variant="secondary"
                   size="sm"
-                  onClick={() => navigate(`${ROUTES.HOSPITAL.MEDICATIONS}/${generatedTT}`)}
+                  onClick={() => navigate(`/hospital/patient/${generatedTT}/medications`)}
                 >
                   Add Pre-admission Medications
                 </Button>
                 <Button
                   variant="secondary"
                   size="sm"
-                  onClick={() => navigate(`${ROUTES.HOSPITAL.ADMISSION}/${generatedTT}`)}
+                  onClick={() => navigate(`/hospital/patient/${generatedTT}/admission`)}
                 >
                   ICU Admission
                 </Button>

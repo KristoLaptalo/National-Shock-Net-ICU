@@ -94,43 +94,20 @@ export function PatientsPage() {
     return matchesStatus && matchesSearch;
   });
 
-  const getActionButton = (patient: typeof MOCK_PATIENTS[0]) => {
+  const handlePatientClick = (patient: typeof MOCK_PATIENTS[0]) => {
+    navigate(`/hospital/patient/${patient.tt}`);
+  };
+
+  const getStatusHint = (patient: typeof MOCK_PATIENTS[0]) => {
     switch (patient.status) {
       case 'pending':
-        return (
-          <span className="text-sm text-gray-500">Awaiting review</span>
-        );
+        return <span className="text-sm text-gray-500">Click to view</span>;
       case 'approved':
-        return (
-          <Button
-            size="sm"
-            onClick={() => navigate(`${ROUTES.HOSPITAL.ADMISSION}/${patient.id}`)}
-          >
-            Admit
-          </Button>
-        );
+        return <span className="text-sm text-shock-blue">Ready to admit</span>;
       case 'admitted':
-        return (
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              onClick={() => navigate(`${ROUTES.HOSPITAL.DAILY_ENTRY}/${patient.id}`)}
-            >
-              Daily Entry
-            </Button>
-            <Button
-              size="sm"
-              variant="secondary"
-              onClick={() => navigate(`${ROUTES.HOSPITAL.DISCHARGE}/${patient.id}`)}
-            >
-              Discharge
-            </Button>
-          </div>
-        );
+        return <span className="text-sm text-shock-green">ICU Day {patient.icuDay}</span>;
       case 'discharged':
-        return (
-          <span className="text-sm text-gray-500">Archived</span>
-        );
+        return <span className="text-sm text-gray-500">Archived</span>;
       default:
         return null;
     }
@@ -201,7 +178,11 @@ export function PatientsPage() {
           </Card>
         ) : (
           filteredPatients.map((patient) => (
-            <Card key={patient.id} className="hover:shadow-md transition-shadow">
+            <Card
+              key={patient.id}
+              className="hover:shadow-md transition-shadow cursor-pointer"
+              onClick={() => handlePatientClick(patient)}
+            >
               <CardContent>
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                   {/* Patient Info */}
@@ -219,10 +200,23 @@ export function PatientsPage() {
                     </div>
                   </div>
 
-                  {/* Status and Actions */}
+                  {/* Status and Hint */}
                   <div className="flex items-center gap-4">
                     <StatusBadge status={patient.status} />
-                    {getActionButton(patient)}
+                    {getStatusHint(patient)}
+                    <svg
+                      className="w-5 h-5 text-gray-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 5l7 7-7 7"
+                      />
+                    </svg>
                   </div>
                 </div>
               </CardContent>
